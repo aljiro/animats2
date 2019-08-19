@@ -4,8 +4,9 @@ private:
 	vector<GeometricObject> objects;
 	Solver solver;
 
+	Simulation(){}
 public:
-	void run(){
 
-	}
+	static Simulation* load( char** name );
+	void run();
 };

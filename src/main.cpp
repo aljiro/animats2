@@ -7,8 +7,14 @@
 
 
 
+
 int main( int argc, char** args ){
-	Simulation s;
-	s.load(name);
+
+	if (argc < 2) {
+        cerr << "\nUsage: ./animats experiment_file \n\n";
+        return -1;
+    }
+
+	Simulation *s = Simulation.load( args[1] );
 	s.run();
 }
