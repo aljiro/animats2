@@ -4,6 +4,8 @@ private:
 	vec v;
 	float m;
 
+	bool move;
+
 public:
 	explicit Point( const vec x, float m):x(x), v(0.0), m(m);
 	Point( const Point& p );

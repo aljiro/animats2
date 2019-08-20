@@ -1,3 +1,7 @@
+#ifndef COLLISIONMGR_H
+#define COLLISIONMGR_H 
+
+
 class CollisionManager{
 private:
 	// Coll cision spring constant
@@ -7,3 +11,5 @@ public:
 
 	~CollisionManager();
 };
+
+#endif

@@ -1,11 +1,7 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#include "util.h"
-#include "enviroment.h"
-#include "body.h"
-#include "brain.h"
-
+#include "simulation.h"
 
 #include <vector>
 #include <iostream>
@@ -16,9 +12,10 @@
 #include "tinyxml2.h"
 
 using namespace arma;
-using namespace std;
 using namespace tinyxml2;
-using namespace morph;
+
+namespace morph{
+namespace Animats{
 
 class ExperimentParser{
 public:
@@ -34,13 +31,21 @@ private:
 	ExperimentParser ep;
 public:
 	Loader( Enviroment *e );
-	
+	virtual void load( Simulation* s, char *name ) = 0
+};
+
+class XMLLoader : public Loader{
+public:
 	void addPlane( XMLNode * );
 	void addAnimat( XMLNode * );
 
-	virtual void load( char *dir ) = 0
-	virtual ~Loader();
+	void load( Simulation *s, char *name );
 };
 
+class JSONLoader : public Loader{
+public:
+	void load( Simulation* s, char *name );
+};
 
+}}
 #endif
