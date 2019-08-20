@@ -6,76 +6,50 @@ namespace morph{
 
 namespace animats{
 
+/*
+ * Transforms
+ */
+
 class MatchTransform{
 private:
 	virtual vec dataTransformation( vec x ) = 0;
+    void precompute( vector<PointMass *>& points );
+    void getR( vector<PointMass *>& points );
 public:
-	vec transform( vec x  );
-	virtual void precompute( vector<PointMass *>& points, Cluster& cluster ) = 0;
-	virtual void compute( vector<PointMass *>& points, Cluster& cluster, double beta  ) = 0;
+    explicit MatchTransform( double beta );
+    virtual void getTransform( vector<Point *>& points );
 };
 
 class LinearMatchTransform : public MatchTransform{
 private:
-    mat T;
-    /*
-        Computers the matrix Apq
-    */
-    mat getApq( vector<Point *>& points );
+    virtual vec dataTransformation( vec x ) = 0;
 public: 
-
-    /*
-        Precomputes the static quatities and stores it in the cluster
-    */
-    void precompute( vector<Point *>& points );
-
-    /*
-        Computes the transformation matrix
-    */
-    void compute( vector<PointMass *>& points, double beta  );
-
-    /* 
-        Applies the computed transformations to a given point
-    */
-    vec transform( vec x0 );
-
+    void getTransform( vector<Point *>& points );
 };
 
 class QuadraticMatchTransform : public MatchTransform{
 private:
-
-    mat T;
-    vec quadraticVec( vec q );
-    mat getLinearApq( vector<PointMass*>& points, Cluster& cluster );
-    mat getApq( vector<PointMass*>& points, Cluster& cluster );
-
+    virtual vec dataTransformation( vec x ) = 0;
 public:
-    vec transform( vec x );
-    void precompute( vector<PointMass*>& points, Cluster& cluster );
-    void compute( vector<PointMass*>& points, Cluster& cluster, double beta  );
-
+    void getTransform( vector<Point *>& points );
 };
+
+/*
+ * Shape specification
+ */
 
 template<class T> class DeformableShape{
 	private:
+        double alpha;
 		T transform;
-		std::vector<Point *> originalShape;
+		std::vector<vec> originalShape;
+        std::vector<vec> goalShape;
 
+        void init( std::vector<Point *>& points );
 	public:
-		explicit DeformableShape();
-		void computeGoals( vector<Point*>& points );
-
+		explicit DeformableShape( double alpha, std::vector<Point *>& points );
+		vector<vec> getGoals( vector<Point*>& points );
 };
 
-class ShapeMatching{
-public:
-		explicit ShapeMatching( double h );
-		/*
-		 *
-		 */
-		void update( GeometricObject *go );
-};
-
-}
-
-}
+} // namespace animats
+} // namespace morph

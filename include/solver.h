@@ -1,9 +1,8 @@
 class Solver{
 private:
 	ForceObject forceChain;
-
+	double h;
 public:
-	void step(){
-
-	}
+	explicit Solver( double h = 0.01 );
+	void step( Simulation& s );
 };
