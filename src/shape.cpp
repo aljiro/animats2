@@ -6,10 +6,16 @@ explicit DeformableShape::DeformableShape( double alpha,
 										   std::vector<Point *>& points ):
 										   alpha(alpha){
 	this->transform = new T( points );
+	init( points );
 }
 
 void DeformableShape::init( std::vector<Point *>& points ){
+// Set the basic precomputations and asign the orignal shape
+	this->originalShape.clear();
 
+	for( Point *p : points ){
+		this->originalShape.push_back( p->x );
+	}
 }
 
 void DeformableShape::getGoals( std::vector<Point *>& points ){
@@ -25,5 +31,9 @@ void DeformableShape::getGoals( std::vector<Point *>& points ){
 		goals.push_back( g );
 	}
 
-	return goals;
+	return std::shared_ptr<vector<vec>>(&goals);
+}
+
+void DeformableShape::setAlpha( double alpha ){
+	this->alpha = alpha;
 }

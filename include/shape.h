@@ -43,12 +43,12 @@ template<class T> class DeformableShape{
         double alpha;
 		T transform;
 		std::vector<vec> originalShape;
-        std::vector<vec> goalShape;
 
         void init( std::vector<Point *>& points );
 	public:
 		explicit DeformableShape( double alpha, std::vector<Point *>& points );
 		vector<vec> getGoals( vector<Point*>& points );
+        void setAlpha( double alpha );
 };
 
 } // namespace animats

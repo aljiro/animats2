@@ -34,7 +34,7 @@ public:
 	void notifyViews();
 	void reset();
 
-	RigidBody *addRigidBody( string type );
+	RigidBody *addRigidBody( int id, string type );
 	SoftBody *addSoftBody( int id );
 
 	void run();

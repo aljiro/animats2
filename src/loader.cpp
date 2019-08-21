@@ -40,7 +40,8 @@ void ExperimentLoader::load( Simulation *s, char *dir ){
 
 void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 	// Initialize standard position plane
-	RigidBody *p = s->addRigidBody( "plane" );	
+	RigidBody *p = s->addRigidBody( "plane" );
+	GeometricTransform gt;	
 	
 	XMLNode *it = node->FirstChild();
 
@@ -51,15 +52,15 @@ void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 		if( strcmp( elementName, "scale") == 0 ){
 			vec sc = ep.parseVector( element->GetText() );
 			ScaleTransform sct( sc(0), sc(1), 0 );
-			p->mapTransform( sct );
+			gt.compose( sct );
 		}else if( strcmp( elementName, "position" ) == 0 ){
 			vec pos = ep.parseVector( element->GetText() );
 			TranslateTransform tt( pos(0), pos(1), pos(2) );
-			p->mapTransform( tt );
+			gt.compose( tt );
 		}else if( strcmp( elementName, "rotation" ) == 0 ){
 			vec angles = ep.parseVector( element->GetText() );
 			RotateTransform rt( angles(0), angles(1), angles(2) );
-			p->mapTransform( rt );
+			gt.compose( rt );
 		}else if( strcmp( elementName, "collitionable" ) == 0 ){
 			bool c = ep.parseBool( element->GetText() );
 			//p.setCollitionable( c );
@@ -69,7 +70,10 @@ void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 		it = it->NextSibling();
 	}
 
-	
+	State state;
+	state.v = {0,0,0};
+	state.T = gt;
+	p->init( state, 100000 );	
 }
 
 void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
@@ -110,13 +114,17 @@ void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 			double s = ep.parseDouble( element->GetText() );
 			Debug::log(string("Softess: "));
 			cout << s << endl;
-			a->body->setSoftness( s );
+			a->getShape()->setAlpha( s );
 		}else
 			Debug::log("Unrecognized plane options");// exception
 
 		it = it->NextSibling();
 	}
 
+	State state;
+	state.v = {0,0,0};
+	state.T = gt;
+	a->init( state );
 }
 
 // ExperimentParser
