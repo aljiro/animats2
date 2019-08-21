@@ -34,6 +34,9 @@ public:
 	void notifyViews();
 	void reset();
 
+	RigidBody *addRigidBody( string type );
+	SoftBody *addSoftBody( int id );
+
 	void run();
 };
 

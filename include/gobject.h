@@ -30,6 +30,7 @@ private:
 	Shape *shape;
 
 public:
+	SoftBody( MeshProvider* mp, double alpha, double mass )
 	Shape* getShape();
 };
 

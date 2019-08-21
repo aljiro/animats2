@@ -40,7 +40,7 @@ void ExperimentLoader::load( Simulation *s, char *dir ){
 
 void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 	// Initialize standard position plane
-	Plane *p = this->enviroment->addPlane();	
+	RigidBody *p = s->addRigidBody( "plane" );	
 	
 	XMLNode *it = node->FirstChild();
 
@@ -82,7 +82,7 @@ void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 	int max_num = node->ToElement()->IntAttribute("max");
 
 	Debug::log(string("Adding animat to the enviroment"));
-	Animat *a = s->addAgentSet( id, rate, max_num );
+	SoftBody *a = s->addSoftBody( id );
 	Debug::log(string("Starting iteration"));
 
 	GeometricTransform gt;
