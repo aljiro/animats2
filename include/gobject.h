@@ -15,6 +15,9 @@ typedef struct{
 class GeometricObject{
 private:
 	vector<Point *> points;
+	vector<Face *> faces;
+	vector<Edge> edges;
+
 	State initialState;
 public:
 	GeoemtricObject( MeshProvider* mp );
@@ -45,7 +48,6 @@ class RigidBody : public GeometricObject{
 
 public:
 	RigidBody( MeshProvider* mp );
-
 };
 
 }}

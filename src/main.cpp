@@ -11,7 +11,7 @@
 int main( int argc, char** args ){
 
 	if (argc < 2) {
-        cerr << "\nUsage: ./animats experiment_file \n\n";
+        cerr << "\nUsage: ./animats experiment_dir \n\n";
         return -1;
     }
 

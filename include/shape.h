@@ -12,26 +12,30 @@ namespace animats{
 
 class MatchTransform{
 private:
+    mat Aqq;
+
 	virtual vec dataTransformation( vec x ) = 0;
     void precompute( vector<PointMass *>& points );
+    mat MatchTransform::getApq( vector<Point *>& shapePoints, vector<Point *>& points );
     void getR( vector<PointMass *>& points );
+
 public:
     explicit MatchTransform( double beta );
-    virtual void getTransform( vector<Point *>& points );
+    virtual mat getTransform( vector<Point *>& shapePoints, vector<Point *>& points );
 };
 
 class LinearMatchTransform : public MatchTransform{
 private:
-    virtual vec dataTransformation( vec x ) = 0;
+    vec dataTransformation( vec x );
 public: 
-    void getTransform( vector<Point *>& points );
+    mat getTransform( vector<Point *>& shapePoints, vector<Point *>& points );
 };
 
 class QuadraticMatchTransform : public MatchTransform{
 private:
-    virtual vec dataTransformation( vec x ) = 0;
+    vec dataTransformation( vec x );
 public:
-    void getTransform( vector<Point *>& points );
+    mat getTransform( vector<Point *>& shapePoints, vector<Point *>& points );
 };
 
 /*
@@ -42,7 +46,7 @@ template<class T> class DeformableShape{
 	private:
         double alpha;
 		T transform;
-		std::vector<vec> originalShape;
+		std::vector<Point *> originalShape;
 
         void init( std::vector<Point *>& points );
 	public:
