@@ -1,10 +1,11 @@
+#include "point.h"
+#include "util.h"
 #include <armadillo>
 
 using namespace arma;
+using namespace std;
 
-namespace morph{
-
-namespace animats{
+namespace morph{ namespace animats{
 
 /*
  * Transforms
@@ -13,21 +14,25 @@ namespace animats{
 class MatchTransform{
 private:
     mat Aqq;
+    double beta;
 
 	virtual vec dataTransformation( vec x ) = 0;
-    void precompute( vector<PointMass *>& points );
-    mat MatchTransform::getApq( vector<Point *>& shapePoints, vector<Point *>& points );
-    void getR( vector<PointMass *>& points );
+    void precompute( const vector<Point *>& points );
+    mat getApq( vector<Point *>& shapePoints, vector<Point *>& points, const vec (*f)(vec) );
+    mat getR( const mat& Apq );
 
 public:
-    explicit MatchTransform( double beta );
+    explicit MatchTransform( const vector<Point *>& points, double beta );
     virtual mat getTransform( vector<Point *>& shapePoints, vector<Point *>& points );
 };
+
+// Main subclasses
 
 class LinearMatchTransform : public MatchTransform{
 private:
     vec dataTransformation( vec x );
 public: 
+    LinearMatchTransform(const vector<Point *>& points, double beta);
     mat getTransform( vector<Point *>& shapePoints, vector<Point *>& points );
 };
 
@@ -35,11 +40,12 @@ class QuadraticMatchTransform : public MatchTransform{
 private:
     vec dataTransformation( vec x );
 public:
+    QuadraticMatchTransform(const vector<Point *>& points, double beta);
     mat getTransform( vector<Point *>& shapePoints, vector<Point *>& points );
 };
 
 /*
- * Shape specification
+ * Shape specification : main interface
  */
 
 template<class T> class DeformableShape{

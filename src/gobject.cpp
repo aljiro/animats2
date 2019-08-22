@@ -1,9 +1,20 @@
 #include "gobject.h"
 
 // Geometric Object
+// Constructors and operators
 GeometricObject::GeometricObject( MeshProvider *mp ){
 	mp->populate(this);
 }
+
+GeometricObject::GeometricObject( const GeometricObject& go ){
+
+	
+}
+
+GeometricObject& GeometricObject::operator=( const GeometricObject& go ){
+
+}
+
 
 void GeometricObject::mapTransform( const GeometricTransform& gt ){
 	gt.map( this->points );
@@ -45,6 +56,10 @@ void GeometricObject::init( State initialState, double mass = 1.0 ){
 
     this->initialState = initialState;
     this->reset();
+}
+
+vector<Point *>&  GeometricObject::getPoints(){
+	return this->points;
 }
 
 // SoftBody

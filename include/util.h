@@ -1,3 +1,6 @@
+#ifndef UTIL_H
+#define UTIL_H
+
 namespace morph{
 namespace Animats{
 	
@@ -38,23 +41,7 @@ inline std::string printvec2( arma::vec v ){
 	return s.str();
 }
 
-inline vec computeCenterOfMass( vector<Point *> points ){
-	vec cg = zeros<vec>(3);
-    double M = 0;
-    Point *p;
-
-    for(int i=0; i < points.size(); i++){
-        p = points[i];
-        //Debug::log(string("Point position: ") + printvec(p.originalPosition));
-        cg += p->m*p->x;
-        M += p->m;
-    }
-
-    cg /= M;
-    return cg;
-}
-
-inline vec computeCenterOfMass( vector<vec> points ){
+inline vec computeCenterOfMass( const vector<Point *>& points ){
 	vec cg = zeros<vec>(3);
     double M = 0;
     Point *p;
@@ -71,3 +58,5 @@ inline vec computeCenterOfMass( vector<vec> points ){
 }
 
 }}
+
+#endif

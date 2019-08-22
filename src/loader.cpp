@@ -34,8 +34,6 @@ void ExperimentLoader::load( Simulation *s, char *dir ){
 
 		it = it->NextSibling();
 	}
-	
-	
 }
 
 void XMLLoader::addPlane( Simulation *s, XMLNode* node ){

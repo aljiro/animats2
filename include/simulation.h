@@ -36,6 +36,8 @@ public:
 
 	RigidBody *addRigidBody( int id, string type );
 	SoftBody *addSoftBody( int id );
+	vector<SoftBody *>& getSoftBodies();
+	vector<RigidBody *>& getRigidBodies();
 
 	void run();
 };

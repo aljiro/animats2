@@ -1,3 +1,11 @@
+#ifndef FORCE_H
+#define FORCE_H
+
+#include "simulation.h"
+
+namespace morph{
+namespace Animats{
+
 class ForceObject{
 private:
 	ForceObject *nextObject;
@@ -5,9 +13,9 @@ public:
 	ForceObject( ForceObject *fo );
 	ForceObject *next();
 	
-	void applyForce( Simulation& s );
+	void applyForce( GeometricObject* go );
 	// Abstract functions
-	virtual void apply( ParticleSystem *ps ) = 0;
+	virtual void apply( GeometricObject* go ) = 0;
 	virtual ~ForceObject();
 };
 
@@ -15,6 +23,10 @@ public:
 class GravityForce: public ForceObject{
 public:
 	GravityForce( ForceObject *fo );
-	void apply( Simulation& s );
+	void apply( GeometricObject* go );
 
 };
+
+}}
+
+#endif

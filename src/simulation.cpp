@@ -11,7 +11,11 @@ void simulation::computeExternalForces(){
 		(*it).resolve();
 	}
 
-	this->forceChain->apply( this );
+	for( GeometricObject *go : this->softBodies )
+		this->forceChain->apply( go );
+
+	for( GeometricObject *go : this->rigidBodies )
+		this->forceChain->apply( go );
 }
 
 void Simulation::reset(){
@@ -24,6 +28,14 @@ void Simulation::reset(){
 		rb->reset();
 	}
 
+}
+
+vector<SoftBody *>& Simulation::getSoftBodies(){
+	return this->softBodies;
+}
+
+vector<RigidBody *>& Simulation::getRigidBodies(){
+	return this->rigidBodies;
 }
 
 void Simulation::run(){

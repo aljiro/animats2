@@ -19,8 +19,13 @@ private:
 	vector<Edge> edges;
 
 	State initialState;
+
 public:
-	GeoemtricObject( MeshProvider* mp );
+	// Graphic objects
+	GLuint VBO;
+	GLuint VAO;
+
+	GeometricObject( MeshProvider* mp );
 	GeometricObject( const GeometricObject& go ); // Copy constructor
 	GeometricObject& operator=( const GeometricObject& go ); // Copy assignment operator
 
@@ -32,6 +37,7 @@ public:
 
     virtual void init( State initialState, double mass = 1.0 );
 
+    vector<Point *>& getPoints();
 };
 
 class SoftBody : public GeometricObject{
