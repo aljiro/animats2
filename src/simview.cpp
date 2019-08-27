@@ -1,5 +1,10 @@
 #include "simview.h"
 
+SimView::SimView():shaderId(-1), colorId(-1){
+	if( this->init() != 0 )
+		cout << "Error initializing the view!" << endl;
+}
+
 int SimView::init(){
 	int width = 1024;
 	int height = 768;
@@ -40,23 +45,15 @@ int SimView::init(){
 
     glfwSetInputMode(this->window, GLFW_STICKY_KEYS, GL_TRUE);
     glClearColor(0.0f, 0.3f, 0.4f, 0.0f);
+    return 0;
 
 }
 
 void SimView::createBuffer( GeometricObject *go ){
 
-	GLfloat shape[]{
-		0.0f, 1.0f, 0.0f,
-	    1.0f, 0.0f, 0.0f,
-	    0.0f, 0.0f, 0.0f,
-
-	    0.0f, 1.0f, 0.0f,
-	    1.0f, 1.0f, 0.0f,
-	    1.0f, 0.0f, 0.0f
-	};
-
+	GLfloat* shape = collectObjectShape( go );
 	glGenVertexArrays( 1, &(go->VAO) );
-	glGenBuffers( 1, &go->VBO );	
+	glGenBuffers( 1, &(go->VBO) );	
 	glBindBuffer( GL_ARRAY_BUFFER, go->VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(shape), shape, GL_STATIC_DRAW );
 	glBindVertexArray( go->VAO );	
@@ -66,25 +63,19 @@ void SimView::createBuffer( GeometricObject *go ){
 
 // Drawing routines
 void SimView::setup( Simulation &s ){
-	cout << "Initializing the simulation" << endl;
+	cout << "Generating data for OpenGL" <<endl;
 
 	// Initializing buffers for each object
 	vector<SoftBody *>& softBodies = s.getSoftBodies();
+	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
 
 	for( SoftBody *sb : softBodies ){
 		createBuffer( sb );
 	}
 
-
-	cout << "Generating data for OpenGL" <<endl;
-	glGenVertexArrays( 1, &(this->VAO) );
-	glGenBuffers( 1, &this->VBO );	
-	glBindBuffer( GL_ARRAY_BUFFER, this->VBO );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(particle_shape), particle_shape, GL_STATIC_DRAW );
-	glBindVertexArray( this->VAO );
-	
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0 );
-	glEnableVertexAttribArray( 0 );
+	for( RigidBody *rb : rigidBodies ){
+		createBuffer( rb );	
+	}
 
 	cout << "Loading the shaders" << endl;
 	// Loading shaders
@@ -93,31 +84,78 @@ void SimView::setup( Simulation &s ){
 	this->offsetId = glGetUniformLocation( this->shaderId, "offset");
 	this->colorId = glGetUniformLocation( this->shaderId, "color");
 
-	cout << "Initializing the particle system" << endl;
-	// Setting up the particle system
-	ps = new ParticleSystem( this->n );
-	ps->init();
+}
+
+GLfloat* SimView::collectObjectShape( GeometricObject *go ){
+	vector<Point*> points = go->getPoints();	
+	const int N = 3*points.size();
+	GLfloat shape[N];
+
+	for( int i = 0; i < N; i+=3 )
+	{
+		shape[i] = points[i]->x[0];
+		shape[i+1] = points[i]->x[1];
+		shape[i+2] = points[i]->x[2];
+	}
+
+	return shape;
 }
 
 
-void SimView::draw( ParticleSystem *ps ){
+void SimView::drawObject( GeometricObject *go ){
+	GLfloat *shape = collectObjectShape( go );
+	GLfloat color[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // Set according to heat
+
+	glBindBuffer( GL_ARRAY_BUFFER, go->VBO );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(shape), shape, GL_STATIC_DRAW );
+	
+	glUniform4fv( this->colorId, 1, color );
+	glBindVertexArray( this->VAO );
+	glDrawArrays( GL_TRIANGLES, 0, go->getPoints().size() );
+	glBindVertexArray(0);
+}
+
+void SimView::draw( Simulation *s ){
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glBlendFunc( GL_SRC_ALPHA, GL_ONE );
 	glUseProgram( this->shaderId );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	GLfloat color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+	
+	// Drawing rigid bodies first
+	vector<SoftBody *>& softBodies = s.getSoftBodies();
+	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
 
-	for( Particle *p : ps->particles ){
-		color[3] = 1-sqrt((pow(p->x[0],2) + pow(p->x[1],2)));
-		color[1] = p->life/2.0;
-
-		glUniform3fv( this->offsetId, 1, p->x );
-		glUniform4fv( this->colorId, 1, color );
-		glBindVertexArray( this->VAO );
-		glDrawArrays( GL_TRIANGLES, 0, 6 );
-		glBindVertexArray(0);
+	for( RigidBody *rb : rigidBodies ){
+		drawObject( rb );
 	}
 
-	
+	for( SoftBody *sb : softBodies ){
+		drawObject( sb );
+	}
+
+	glfwSwapBuffers(this->window);
+    glfwPollEvents();	
+}
+
+SimView::~SimView(){
+	// Cleanup VBO and shader
+	// TO-DO: It might be better to have a function "getAllBodies"
+	vector<SoftBody *>& softBodies = s.getSoftBodies();
+	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
+
+	for( RigidBody *rb : rigidBodies ){
+		glDeleteBuffers(1, &(rb->VBO) );
+    	glDeleteVertexArrays(1, &(rb->VAO) );
+	}
+
+	for( Softody *sb : softBodies ){
+		glDeleteBuffers(1, &(sb->VBO) );
+    	glDeleteVertexArrays(1, &(sb->VAO) );
+	}
+
+    glDeleteProgram(this->shaderId);
+
+    // Close OpenGL window and terminate GLFW
+    glfwTerminate();
 }

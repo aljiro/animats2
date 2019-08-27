@@ -1,6 +1,6 @@
 #include "solver.h"
 
-explicit Solver::Solver( double h = 0.01 ):h(h), t(0.01){
+explicit Solver::Solver( double h = 0.01 ):h(h), t(0.0){
 
 }
 

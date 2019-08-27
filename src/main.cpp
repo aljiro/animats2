@@ -4,6 +4,7 @@
  */
 
 #include "simulation.h"
+#include "simview.h"
 
 
 int main( int argc, char** args ){
@@ -14,5 +15,8 @@ int main( int argc, char** args ){
     }
 
 	Simulation *s = Simulation.load( args[1] );
-	s.run();
+	SimView *sview = new SimView();
+	s->addView( sview );
+
+	s.run( 100 );
 }

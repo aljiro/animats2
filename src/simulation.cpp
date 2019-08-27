@@ -1,10 +1,6 @@
 #include "simulation.h"
 
-// Private
-
-
 // Public 
-
 void simulation::computeExternalForces(){
 	for( vector<Contact *>::iterator it = this->contacts.begin(); 
 		 it != contacts.end(); ++it){
@@ -27,7 +23,6 @@ void Simulation::reset(){
 	for( RigidBody *rb : rigidBodies ){
 		rb->reset();
 	}
-
 }
 
 vector<SoftBody *>& Simulation::getSoftBodies(){
@@ -38,18 +33,22 @@ vector<RigidBody *>& Simulation::getRigidBodies(){
 	return this->rigidBodies;
 }
 
-void Simulation::run(){
+void Simulation::run( int maxSteps = -1 ){
 	this->reset();
 	Solver solver;
+	this->running = true;
 
 	while( this->running ){
 		this->contacts = collisionMgr.findCollisions();
 
 		solver.step( *this );
-		this->notifyViews( *this, "Simulation step" );
-
 		collisionManager.pruneContacts( this->contacts );
+
+		this->notifyViews( *this, "Simulation step" );
 		this->step++;
+
+		if( maxSteps > 0 && this->step > maxSteps )
+			this->running = false;
 	}
 }
 
@@ -80,10 +79,21 @@ Simulation *load( char *name ){
 	try{
 		Simulation *s = loader.load( name );
 		return std::shared_ptr<Simulation *>(s);
-
 	}catch(const std::exception& e ){
 		return NULL;
 	}
 	
+}
+
+void Simulation::addView( View *view ){
+	if( view != NULL )
+		this->views.push_back( view );
+}
+
+
+void Simulation::notifyViews(){
+	for( View *view : this->views ){
+		view->notify( this );
+	}
 }
 

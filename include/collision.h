@@ -1,5 +1,5 @@
-#ifndef COLLISIONMGR_H
-#define COLLISIONMGR_H 
+#ifndef COLLISION_H
+#define COLLISION_H 
 
 
 class CollisionManager{

@@ -1,10 +1,16 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#include <iostream>
+#include <vector>
+
 #include "solver.h"
-#include "geometric_object.h"
+#include "gobject.h"
+#include "collision.h"
 #include "contact.h"
 #include "loader.h"
+#include "force.h"
+#include "view.h"
 
 using namespace std;
 
@@ -13,10 +19,16 @@ namespace morph{ namespace animats{
 class Simulation{
 private:
 	// Objects
+	// Holds the active contacts in the simulation
 	vector<Contact *> contacts;
+	// Softbodies and rigid bodies are 
+	// potentially treated differently
 	vector<SoftBody *> softBodies;
 	vector<RigidBody *> rigidBodies;
+	// Force objects.
+	// TO-DO: not sure if I will keep this way of doing it
 	ForceObject *forceChain;
+	// Views to be notified at each step
 	vecotr<View *> views;
 
 	// State variables
@@ -39,7 +51,7 @@ public:
 	vector<SoftBody *>& getSoftBodies();
 	vector<RigidBody *>& getRigidBodies();
 
-	void run();
+	void run( int maxSteps = -1 );
 };
 
 }}

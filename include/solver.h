@@ -2,7 +2,7 @@
 #define SOLVER_H
 
 #include "simulation.h"
-#include "geometric_object.h"
+#include "gbject.h"
 
 namespace morph{ namespace animats{
 

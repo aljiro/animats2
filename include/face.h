@@ -1,7 +1,18 @@
+#ifndef FACE_H
+#define FACE_H
+
 /*
 A face DOES contain a reference to the actual points. 
 A face is a topological object.
 */ 
+
+#include <iostream>
+#include <vector>
+
+#include "point.h"
+
+namespace morph{ namespace animats{
+
 class Face{
 
 private:
@@ -61,3 +72,7 @@ public:
 	// Destructor
 	~Face();
 };
+
+}}
+
+#endif
