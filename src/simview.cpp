@@ -1,8 +1,11 @@
 #include "simview.h"
 
-SimView::SimView():shaderId(-1), colorId(-1){
+SimView::SimView( Simulation& s ):shaderId(-1), colorId(-1){
 	if( this->init() != 0 )
 		cout << "Error initializing the view!" << endl;
+		return;
+
+	this->setup( s );
 }
 
 int SimView::init(){

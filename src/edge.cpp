@@ -1,14 +1,16 @@
 #include "edge.h"
 
-Edge::Edge(  PointMass* v0, PointMass* v1 ){
+Edge::Edge(  Point* v0, Point* v1 ){
 	this->v0 = v0;
 	this->v1 = v1;
 }
 
-PointMass* Edge::getHead(){
-	vec u = this->v1->position - this->v0->position;
+Point* Edge::getHead(){
+	vec u = this->v1->x - this->v0->x;
 
-	if( dot(u, this->v1->velocity) > 0 ) 
+	if( dot(u, this->v1->v) > 0 ) 
 		return this->v1;
-	else
+	else	
+		return this->v0;
+}
 	

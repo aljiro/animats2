@@ -21,9 +21,9 @@ private:
 	GLuint shaderId;
 	GLuint colorId;
 public:
-	SimView();
+	SimView( Simulation& s );
 	int init();
-	void setup( Simulation &s );
+	void setup( Simulation& s );
 	void draw();
 	void drawObject( GeometricObject *go );
 	void createBuffer( GeometricObject *go );

@@ -2,6 +2,7 @@
 #define FORCE_H
 
 #include "simulation.h"
+#include "gobject.h"
 
 namespace morph{
 namespace Animats{

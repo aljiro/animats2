@@ -53,14 +53,14 @@ void Face::computeNormal( ){
 	The test indicates if one of the extremes of the edge is on the positive 
 	half space of the plane that contains the face
 */
-bool Face::A( PointMass face_point, vec edge_vector ){
+bool Face::A( Point face_point, vec edge_vector ){
 
 	// cout << "Penetration test:\n-------" << endl;
-	// cout << "Face point: " << printvec(face_point.position) << endl;
+	// cout << "Face point: " << printvec(face_point.x) << endl;
 	// cout << "Edge point: " << printvec(edge_vector) << endl;
 	// cout << "Normal: " << printvec(this->normal) << endl;
 
-	vec u = face_point.position;
+	vec u = face_point.x;
 	return dot( this->normal, edge_vector - u ) > 0;
 }
 
@@ -72,9 +72,9 @@ bool Face::A( PointMass face_point, vec edge_vector ){
 	
 */
 bool Face::B( Point vn, Point vm, Point vl, Point vk ){
-	vec e_face = vm.position - vn.position;
-	vec e_object = vk.position - vl.position;
-	vec v = vm.position - vk.position;
+	vec e_face = vm.x - vn.x;
+	vec e_object = vk.x - vl.x;
+	vec v = vm.x - vk.x;
 
 	vec u = cross( e_face, e_object );
 	return dot( u, v ) > 0;
@@ -93,22 +93,22 @@ bool Face::penetrates( Point *p ){
 		p->pre != NULL) )
 		return false;
 
-	vec p1 = this->points[0]->pre->position;
-	vec p2 = this->points[1]->pre->position;
-	vec p3 = this->points[2]->pre->position;
+	vec p1 = this->points[0]->pre->x;
+	vec p2 = this->points[1]->pre->x;
+	vec p3 = this->points[2]->pre->x;
 	vec normal_past = cross( p1 - p2, p2 - p3 );
 
 	if( dot(this->normal, normal_past) <  0 )
 		normal_past = -normal_past;
 
-	vec u_past = this->points[0]->pre->position;
-	vec u = this->points[0]->position;
+	vec u_past = this->points[0]->pre->x;
+	vec u = this->points[0]->x;
 	
-	double a = dot( this->normal, p->position - u );
-	double b = dot( normal_past, p->pre->position - u_past );
+	double a = dot( this->normal, p->x - u );
+	double b = dot( normal_past, p->pre->x - u_past );
 
 	if( ((a > 0  && b < 0) || (a < 0 && b > 0 )) && 
-		this->isInside(p->position) ){		
+		this->isInside(p->x) ){		
 		return true;
 	}
 	else
@@ -128,11 +128,11 @@ PenetrationInfo Face::isPenetrated( Edge&  e ){
 		this->computeNormal();
 	}
 
-	apred_out = (not this->A( *(this->points[0]), e.v1->position ) ) && 
-		       		 this->A( *(this->points[0]), e.v0->position );
+	apred_out = (not this->A( *(this->points[0]), e.v1->x ) ) && 
+		       		 this->A( *(this->points[0]), e.v0->x );
     //Debug::log("Computing predicate A_in.");
-	apred_in = 	     this->A( *(this->points[0]), e.v1->position ) &&
-		     	(not this->A( *(this->points[0]), e.v0->position ) );
+	apred_in = 	     this->A( *(this->points[0]), e.v1->x ) &&
+		     	(not this->A( *(this->points[0]), e.v0->x ) );
 	bpred_out = true;
 	bpred_in = true;
 	
@@ -158,7 +158,7 @@ vec Face::faceObjectCentroid( vector<PointMass *>& face_points ){
 	vec vv = zeros<vec>(3);
 
 	for( int i = 0; i <face_points.size(); i++ )
-		vv += face_points[i]->position;
+		vv += face_points[i]->x;
 
 	vv /= face_points.size();
 	return vv;
@@ -166,7 +166,7 @@ vec Face::faceObjectCentroid( vector<PointMass *>& face_points ){
 
 double Face::getPenetrationDepth( Edge& e ){	
 
-	vec v = e.v1->position - e.v0->position;
+	vec v = e.v1->x - e.v0->x;
 	// if( dot(v, this->normal) >= 0){
 
 	// 	this->normal = -this->normal;
@@ -174,44 +174,44 @@ double Face::getPenetrationDepth( Edge& e ){
 
 	vec n = this->normal;
 
-	vec f_cm = (this->points[0]->position +
-			   this->points[1]->position + 
-			   this->points[2]->position)/3.0;
-	vec a = e.v0->position - f_cm;
-	vec b = e.v1->position - f_cm;
+	vec f_cm = (this->points[0]->x +
+			   this->points[1]->x + 
+			   this->points[2]->x)/3.0;
+	vec a = e.v0->x - f_cm;
+	vec b = e.v1->x - f_cm;
 
 	double tp = -(dot(n, a))/(dot(n, b-a));
 	vec g = b*tp + a*(1-tp);
 	g += f_cm;
-	double d = norm( e.v1->position - g );
+	double d = norm( e.v1->x - g );
 
 	return d ; 
 }
 
 vec Face::getFaceProjection( Edge& e ){
-	vec v = e.v1->position - e.v0->position;
+	vec v = e.v1->x - e.v0->x;
 	// if( dot(v, this->normal) >= 0){
 
 	// 	this->normal = -this->normal;
 	// }
 
 	vec n = this->normal;
-	vec f_cm = (this->points[0]->position +
-			   this->points[1]->position + 
-			   this->points[2]->position)/3.0;
+	vec f_cm = (this->points[0]->x +
+			   this->points[1]->x + 
+			   this->points[2]->x)/3.0;
 	vec fp_cm;
 	if( this->points[0]->pre != NULL ){
-		fp_cm = (this->points[0]->pre->position +
-			   this->points[1]->pre->position + 
-			   this->points[2]->pre->position)/3.0;
+		fp_cm = (this->points[0]->pre->x +
+			   this->points[1]->pre->x + 
+			   this->points[2]->pre->x)/3.0;
 	}else
 		fp_cm = f_cm;
 
-	vec a = e.v0->position - f_cm;
-	vec b = e.v1->position - f_cm;
+	vec a = e.v0->x - f_cm;
+	vec b = e.v1->x - f_cm;
 	vec g;
 
-	if( norm(e.v1->position - e.v0->position) < 0.001 && norm(f_cm - fp_cm) > 0.01){
+	if( norm(e.v1->x - e.v0->x) < 0.001 && norm(f_cm - fp_cm) > 0.01){
 		g = b - f_cm;
 	}else{
 		double tp = -(dot(n, a))/(dot(n, b-a));
@@ -226,13 +226,13 @@ vec Face::getFaceProjection( Edge& e ){
 }
 
 vec Face::getFaceProjection2( Edge& e ){
-	vec x0 = this->points[0]->position; // A point in the plane	
+	vec x0 = this->points[0]->x; // A point in the plane	
 	// We calculate which of the points is in the interior
-	vec u0 = e.v1->position - x0;
+	vec u0 = e.v1->x - x0;
 
 
 	//if( dot( u0, this->normal ) < 0 )
-		return  e.v1->position + abs(dot( u0, this->normal ))*this->normal;
+		return  e.v1->x + abs(dot( u0, this->normal ))*this->normal;
 	//else
 	//	return 0;
 }
@@ -241,9 +241,9 @@ vec Face::getFaceProjection2( Edge& e ){
  // Old penetration depth
 double Face::getPenetrationDepth2( Edge& e ){
 
-	vec x0 = this->points[0]->position; // A point in the plane	
+	vec x0 = this->points[0]->x; // A point in the plane	
 	// We calculate which of the points is in the interior
-	vec u0 = e.v1->position - x0;
+	vec u0 = e.v1->x - x0;
 
 
 	//if( dot( u0, this->normal ) < 0 )
@@ -253,13 +253,13 @@ double Face::getPenetrationDepth2( Edge& e ){
 }
 
 // Pointing outwards
-void Face::fixNormalOrientation( vector<PointMass *>& face_points ){
+void Face::fixNormalOrientation( vector<Point *>& face_points ){
 	if( !this->recompute )
 		return;
 	else
 		this->computeNormal();
 
-	vec x0 = this->points[0]->position; 
+	vec x0 = this->points[0]->x; 
 	vec vv = faceObjectCentroid( face_points );
 
 	vv -= x0;
@@ -272,9 +272,9 @@ void Face::fixNormalOrientation( vector<PointMass *>& face_points ){
 }
 
 vec Face::getCentroid( ){
-	vec p1 = this->edges[0].v0->position;
-	vec p2 = this->edges[1].v0->position;
-	vec p3 = this->edges[2].v0->position;
+	vec p1 = this->edges[0].v0->x;
+	vec p2 = this->edges[1].v0->x;
+	vec p3 = this->edges[2].v0->x;
 
 	return (p1 + p2 + p3)/3;
 }
@@ -284,15 +284,15 @@ vec Face::getCentroid( ){
  */
 vec Face::project( Edge& e ){
 	double d = getPenetrationDepth( e );
-	vec npos = e.v1->position + d*this->normal;
+	vec npos = e.v1->x + d*this->normal;
 	return npos;
 }
 
 bool Face::isInside( vec pos ){
 	// Computing the barycentric coordinates
-	vec p1 = this->edges[0].v0->position;
-	vec p2 = this->edges[1].v0->position;
-	vec p3 = this->edges[2].v0->position;
+	vec p1 = this->edges[0].v0->x;
+	vec p2 = this->edges[1].v0->x;
+	vec p3 = this->edges[2].v0->x;
 
 	vec u0 = p2 - p1;
 	vec u1 = p3 - p1;

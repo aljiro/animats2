@@ -21,10 +21,11 @@ void Solver::step( Simulation *s ){
 			if( !points[i].move )
 				continue;
 
-			vec x = points[i].x;
+			points[i]->pre = new Point(*(points[i]));// Copy
+			vec x = points[i]->x;
 			vec g = goals[i];
-			vec f = points[i].f;
-			double m = points[i].m;
+			vec f = points[i]->f;
+			double m = points[i]->m;
 			// Modified Euler
 			p->v += alpha*( g - x )/h + h*f/m;
 			p->x += h*p->v;

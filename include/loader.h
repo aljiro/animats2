@@ -2,6 +2,7 @@
 #define LOADER_H
 
 #include "simulation.h"
+#include "util.h"
 
 #include <vector>
 #include <iostream>
@@ -35,10 +36,10 @@ public:
 };
 
 class XMLLoader : public Loader{
-public:
+private:
 	void addPlane( XMLNode * );
 	void addAnimat( XMLNode * );
-
+public:
 	void load( Simulation *s, char *name );
 };
 

@@ -10,8 +10,16 @@ A face is a topological object.
 #include <vector>
 
 #include "point.h"
+#include "edge.h"
 
 namespace morph{ namespace animats{
+
+typedef struct{
+	bool result;
+	bool faceEdge;
+	bool edgeEdge;
+} PenetrationInfo;
+
 
 class Face{
 
@@ -26,7 +34,7 @@ public:
 	bool recompute;
 	bool iscontact;
 
-	Face(PointMass *p1, PointMass *p2, PointMass *p3);
+	Face(Point *p1, Point *p2, Point *p3);
 
 	/*
 		Computes the normal vector to the face for a particular 
@@ -40,14 +48,14 @@ public:
 		The test indicates if one of the extremes of the edge is on the positive 
 		half space of the plane that contains the face
 	*/
-	bool A( PointMass face_point, vec edge_vector );
+	bool A( Point face_point, vec edge_vector );
 	/*
 		Predicate type B. Requires:
 		1. An edge in the face with extremes vn, vm
 		2. An edge of the incident object with extremes vl, vk
 		
 	*/
-	bool B( PointMass vn, PointMass vm, PointMass vl, PointMass vk );
+	bool B( Point vn, Point vm, Point vl, Point vk );
 
 	vec project( Edge& e );
 	/* 
@@ -55,14 +63,14 @@ public:
 	*/
 	PenetrationInfo isPenetrated( const Edge&  e );
 
-	bool penetrates( PointMass *p );
-	vec faceObjectCentroid( vector<PointMass *>& face_points );
+	bool penetrates( Point *p );
+	vec faceObjectCentroid( vector<Point *>& face_points );
 	double getPenetrationDepth( Edge& e );
 	double getPenetrationDepth2( Edge& e );
 	vec getFaceProjection( Edge& e );
 	vec getFaceProjection2( Edge& e );
 	// Pointing outwards
-	void fixNormalOrientation( vector<PointMass *>& face_points );
+	void fixNormalOrientation( vector<Point *>& face_points );
 
 	vec getCentroid();
 	bool isInside( vec pos );

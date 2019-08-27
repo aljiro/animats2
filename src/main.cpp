@@ -15,7 +15,7 @@ int main( int argc, char** args ){
     }
 
 	Simulation *s = Simulation.load( args[1] );
-	SimView *sview = new SimView();
+	SimView *sview = new SimView( s );
 	s->addView( sview );
 
 	s.run( 100 );
