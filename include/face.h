@@ -8,9 +8,14 @@ A face is a topological object.
 
 #include <iostream>
 #include <vector>
+#include <armadillo>
 
 #include "point.h"
 #include "edge.h"
+#include "util.h"
+
+using namespace std;
+using namespace arma;
 
 namespace morph{ namespace animats{
 

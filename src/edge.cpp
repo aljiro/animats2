@@ -1,6 +1,9 @@
-#include "edge.h"
+#include "../include/edge.h"
 
-Edge::Edge(  Point* v0, Point* v1 ){
+using namespace morph::animats;
+using namespace arma;
+
+Edge::Edge( Point* v0, Point* v1 ){
 	this->v0 = v0;
 	this->v1 = v1;
 }
@@ -13,4 +16,3 @@ Point* Edge::getHead(){
 	else	
 		return this->v0;
 }
-	

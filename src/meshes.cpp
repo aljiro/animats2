@@ -1,15 +1,11 @@
 #include "../include/meshes.h"
 
-using namespace arma;
-using namespace std;
-using namespace Util;
-
 using arma::vec;
 using arma::mat;
-
+using namespace morph::animats;
 
 void MeshProvider::addFace3( GeometricObject* go, int p1, int p2, int p3 ){
-	cout << "Adding face: "<< p1 << ", " << p2 << ", " << p3<< ": " << go->points.size()<<endl;
+	//cout << "Adding face: "<< p1 << ", " << p2 << ", " << p3<< ": " << go->getPoints().size()<<endl;
 	go->addFace( p1, p2, p3 );	
 }
 
@@ -41,11 +37,11 @@ CloneMeshProvider::CloneMeshProvider( GeometricObject* original ){
 }
 
 void CloneMeshProvider::populate( GeometricObject* go ){
-	for( PointMass *p : original->points ){
-		go->addPoint( p->originalPosition );
+	for( Point *p : go->getPoints()  ){
+		go->addPoint( p->x);
 	}
 
-	for( Face *f : original->faces ){
+	for( Face *f : go->getFaces() ){
 		go->addFace( f->indexes[0], f->indexes[1], f->indexes[2]);
 	}
 }
@@ -77,7 +73,7 @@ void PlaneMeshProvider::populate( GeometricObject* go ){
 void PlaneMeshProvider::fixNormal(GeometricObject* go){
 	vec u = {0, 0, 1}; // THIS IS GOIN TO FAIL FOR NON-HORIZONTAL
 
-	for(Face *f : go->faces){
+	for(Face *f : go->getFaces()){
 		f->normal = u;
 		f->recompute = false;
 	}
@@ -131,7 +127,7 @@ bool VertexChainLink::doProcess( FILE *f, char *s, GeometricObject* go ){
 		float x, y, z;
 		fscanf(f, "%f %f %f\n", &x, &y, &z );
 		vec pos = { x, y, z };
-		cout << "Adding point: "<<printvec(pos)<<endl;
+		//cout << "Adding point: "<<printvec(pos)<<endl;
 		go->addPoint( pos );
 		return true;
 	}
@@ -159,7 +155,7 @@ bool FaceChainLink::doProcess( FILE *f, char *s, GeometricObject* go ){
 		float x, y, z;
 		fscanf(f, "%f %f %f\n", &x, &y, &z );
 		vec pos = { x, y, z };
-		cout << "Adding normal: "<<printvec(pos)<<endl;
+		//cout << "Adding normal: "<<printvec(pos)<<endl;
 		this->normals.push_back( pos );
 		return true;
 	}
@@ -176,7 +172,7 @@ bool FaceChainLink::doProcess( FILE *f, char *s, GeometricObject* go ){
 	    vi--;
 	    vj--;
 	    vk--;
-	    cout << "Adding face: "<< vi << ", "<< vj << ", "<< vk <<endl;
+	    //cout << "Adding face: "<< vi << ", "<< vj << ", "<< vk <<endl;
 	    go->addFace( vi, vj, vk, normals[nk] );
 
 	    return true;

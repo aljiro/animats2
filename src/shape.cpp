@@ -1,17 +1,18 @@
-#include "shape.h"
+#include "../include/shape.h"
+
+using namespace morph::animats;
 
 // MatchTransforms
 MatchTransform::MatchTransform( const vector<Point *>& points, double beta ):beta(beta){
-    this->precompute( points );
 }
 
 void MatchTransform::precompute( const vector<Point *>& points ){
 	mat M = zeros<mat>(3,3);
     vec q;
-    Debug::log(string("Precomputing Aqq. "));
+    Debug::log(string("Precomputing Aqq."));
 
     for( Point *p : points ){
-        q = p->originalPosition - computeCenterOfMass( points );
+        q = p->x - computeCenterOfMass( points );
     	q = this->dataTransformation(q);
         M += p->m*(q*q.t());
     }
@@ -19,7 +20,9 @@ void MatchTransform::precompute( const vector<Point *>& points ){
     this->Aqq = pinv(M);
 }
 
-mat MatchTransform::getApq( vector<Point *>& shapePoints, vector<Point *>& points, const vec (*tx)(vec) ){
+mat MatchTransform::getApq( vector<Point *>& shapePoints, 
+                            vector<Point *>& points, 
+                            vec (*tx)(vec) ){
     
     assert( shapePoints.size() == points.size() );
 
@@ -38,6 +41,8 @@ mat MatchTransform::getApq( vector<Point *>& shapePoints, vector<Point *>& point
 }
 
 mat MatchTransform::getR( const mat& Apq ){
+    mat U, V;
+    vec s;
     svd( U, s, V, Apq );
     mat R = U*V.t(); 
     return R;
@@ -46,20 +51,22 @@ mat MatchTransform::getR( const mat& Apq ){
 // Linear Match transform
 LinearMatchTransform::LinearMatchTransform( 
                     const vector<Point *>& points, 
-                    double beta ):MatchTransform( points, beta ){}
-
-vec LinearMatchTransform::dataTransformation( vec x ){
-	return x;
+                    double beta ):MatchTransform( points, beta ){
+    this->precompute( points );
 }
 
-void LinearMatchTransform::getTransform( vector<Point *>& shapePoints, 
-                                         vector<Point *>& points ){
+vec LinearMatchTransform::dataTransformation( vec x ){
+	return idTx(x);
+}
+
+mat LinearMatchTransform::getTransform( vector<Point *>& shapePoints, 
+                                        vector<Point *>& points ){
 	assert( shapePoints.size() == points.size() );
 
 	mat U, V, R, Apq, Aqq, A;
 	mat T(3,3, fill::eye);
     vec s;
-    Apq = this->getApq( shapePoints, point, this->dataTransformation );    
+    Apq = this->getApq( shapePoints, points, idTx );    
 
     try{
         R = getR( Apq ); // Apq*sqrt(Apq.t()*Apq)
@@ -83,26 +90,28 @@ void LinearMatchTransform::getTransform( vector<Point *>& shapePoints,
 
 // Quadratic transform
 QuadraticMatchTransform::QuadraticMatchTransform( 
-                        const vector<PointMass *>& points, 
-                        double beta):MatchTransform( points, beta ){}
+                        const vector<Point *>& points, 
+                        double beta):MatchTransform( points, beta ){
+    this->precompute( points );
+}
 
 
 vec QuadraticMatchTransform::dataTransformation( vec q ){
-	vec qc = {q(0), q(1), q(2), q(0)*q(0), q(1)*q(1), q(2)*q(2), q(0)*q(1), q(1)*q(2), q(0)*q(2)};
-	return qc;
+	return quadTx( q );
 }
 
-void QuadraticMatchTransform::getTransform( vector<Point *>& points ){
+mat QuadraticMatchTransform::getTransform( vector<Point *>& shapePoints, 
+                                           vector<Point *>& points ){
     mat U, V, Rl, R, Apq, Aqq, A, Apq_linear;
     mat T(3,3, fill::eye);
     vec s;
-    Apq = this->getApq( points, this->dataTransformation ); 
-    Apq_linear = this->getApq( points, []( vec& x ){ return x; } );
+    Apq = this->getApq( shapePoints, points, quadTx ); 
+    Apq_linear = this->getApq( shapePoints, points, []( vec x ){ return x; } );
 
     try{
         Rl = this->getR(Apq_linear);
         R = join_rows(join_rows( Rl, zeros(3,3) ), zeros(3,3));
-        A = Apq*cluster.Aqq;
+        A = Apq*this->Aqq;
         // TO-DO: preserve volume        
         //double da = det(A);
         //A = A/pow(da, 1.0/3.0 );
@@ -116,25 +125,30 @@ void QuadraticMatchTransform::getTransform( vector<Point *>& points ){
 
 
 // Shape
-DeformableShape::DeformableShape( double alpha, 
+template<class T>
+DeformableShape<T>::DeformableShape( double alpha, 
 								  std::vector<Point *>& points ):
 								  alpha(alpha){
-    double beta = 0.1;                                        
-	this->transform = new T( points, beta );
-	init( points );
+    
 }
 
-void DeformableShape::init( std::vector<Point *>& points ){
+template<class T>
+void DeformableShape<T>::init( std::vector<Point *>& points ){
 // Set the basic precomputations and asign the orignal shape
+    Debug::log(string("Initializing deformable shape"));
+    double beta = 0.1; 
+    this->transform = new T( points, beta );
 	this->originalShape.clear();
 
 	for( Point *p : points ){
 		Point* q = new Point( *p ); // Invoking the copying constructor
 		this->originalShape.push_back( q );
+        cout << printvec(p->x) << endl;
 	}
 }
 
-void DeformableShape::getGoals( std::vector<Point *>& points ){
+template<class T>
+vector<vec> DeformableShape<T>::getGoals( std::vector<Point *>& points ){
 	vector<vec> goals;
 	vec cm = computeCenterOfMass( points );
     vec cm0 = computeCenterOfMass( originalShape );
@@ -142,14 +156,22 @@ void DeformableShape::getGoals( std::vector<Point *>& points ){
 
 	for( i = 0; i < points.size(); i++ ){
 		vec x0 = this->originalShape[i]->x;
-		mat T = transform.getTransform( points );
-		vec g = T*(x0 - cm0) + cm;
+		mat Tx = transform->getTransform( originalShape, points );
+		vec g = Tx*(x0 - cm0) + cm;
 		goals.push_back( g );
 	}
 
-	return std::shared_ptr<vector<vec>>(&goals);
+	return goals;
 }
 
-void DeformableShape::setAlpha( double alpha ){
+template<class T>
+void DeformableShape<T>::setAlpha( double alpha ){
 	this->alpha = alpha;
 }
+
+template<class T>
+double DeformableShape<T>::getAlpha(){
+    return this->alpha;
+}
+
+template class DeformableShape<LinearMatchTransform>; 

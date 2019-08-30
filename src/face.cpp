@@ -1,4 +1,7 @@
-#include "face.h"
+#include "../include/face.h"
+
+using namespace morph::animats;
+using namespace arma;
 
 Face::Face(Point *p1, Point *p2, Point *p3){
 	this->recompute = true;
@@ -118,7 +121,7 @@ bool Face::penetrates( Point *p ){
 /* 
 	Checks the predicates for face piercing.
 */
-PenetrationInfo Face::isPenetrated( Edge&  e ){
+PenetrationInfo Face::isPenetrated( const Edge&  e ){
 
 	bool apred_out, apred_in, bpred_out, bpred_in, b, O_out, O_in;
 	PenetrationInfo contact;
@@ -154,7 +157,7 @@ PenetrationInfo Face::isPenetrated( Edge&  e ){
 	return contact;
 }
 
-vec Face::faceObjectCentroid( vector<PointMass *>& face_points ){
+vec Face::faceObjectCentroid( vector<Point *>& face_points ){
 	vec vv = zeros<vec>(3);
 
 	for( int i = 0; i <face_points.size(); i++ )

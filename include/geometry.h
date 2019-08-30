@@ -1,7 +1,11 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include "point.h"
+#include <vector>
+
 using namespace arma;
+using namespace std;
 
 namespace morph{ namespace animats{
 
@@ -10,11 +14,11 @@ protected:
 	mat M;
 public:
 	GeometricTransform();
-	void map( vector<PointMass *> *points );
+	void map( vector<Point *>&  points );
 	/* 
 		Computes the composition:
 	   	gt0.compose( gt1 ) => gt0 = gt1*gt0
-	*/
+	*/	
 	void compose( GeometricTransform& GT );
 };
 
@@ -34,3 +38,5 @@ public:
 };
 
 }}
+
+#endif

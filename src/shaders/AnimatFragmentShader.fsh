@@ -2,9 +2,9 @@
 
 // Output data
 out vec4 color;
-in vec4 particleColor;
+in vec4 fragmentColor;
 
 void main()
 {
-    color = particleColor;
+    color = fragmentColor;
 }

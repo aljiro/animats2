@@ -1,10 +1,12 @@
-#include "loader.h"
+#include "../include/loader.h"
 
-void ExperimentLoader::load( Simulation *s, char *dir ){
+using namespace morph::animats;
+
+void XMLLoader::load( Simulation *s, char *dir ){
 	
 	XMLDocument doc;
-	chdir(dir); // Changes working directory
-	string experimentFile = "./experiment.xml";
+	//chdir(dir); // Changes working directory
+	string experimentFile = string(dir) + string("./experiment.xml");
 	Debug::log(string("Loading experiment from ") + experimentFile);
 	doc.LoadFile( experimentFile.c_str() );
 	XMLPrinter printer;
@@ -27,7 +29,7 @@ void ExperimentLoader::load( Simulation *s, char *dir ){
 		}
 		else if( strcmp( element, "animat" ) == 0 ){
 			Debug::log(string("Adding an animat"));
-			this->addAnimat( it );
+			this->addAnimat( s, it );
 		}
 		else // error
 			Debug::log("Unrecognized node in the experiment file.");
@@ -38,7 +40,7 @@ void ExperimentLoader::load( Simulation *s, char *dir ){
 
 void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 	// Initialize standard position plane
-	RigidBody *p = s->addRigidBody( "plane" );
+	RigidBody *p = s->addRigidBody( rand()%2000, "plane" );
 	GeometricTransform gt;	
 	
 	XMLNode *it = node->FirstChild();

@@ -1,22 +1,29 @@
 #ifndef POINT_H
 #define POINT_H
 
+#include <armadillo>
+
+using namespace arma;
+
 namespace morph{ namespace animats{
 
 class Point{
 private:
+	vec color;
+public:
 	vec x;
 	vec v;
 	float m;
-	float f;
+	vec f;
 
 	bool move;
 	Point *pre;
 
-public:
-	explicit Point( vec x, float m = 1.0 ):x(x), v(zeros<vec>(3)), m(m), f(zeros<vec>(3));
+	explicit Point( vec x, float m = 1.0, vec color = {0.5, 0.5, 0.5} );
 	//Point( const Point& p );
 	//Point& operator=( const Point& p ); // Copy assignment operator
+
+	vec getColor();
 
 	~Point();
 };

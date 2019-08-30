@@ -1,9 +1,15 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <armadillo>
+#include <iostream>
+#include <vector>
+#include "point.h"
+
 namespace morph{
-namespace Animats{
-	
+namespace animats{
+enum Level{GENERAL, LOOP};
+
 class Debug{
 
 private:
@@ -11,20 +17,14 @@ private:
 public:
 	static const int STD_OUT = 0;
 	static const int FILE = 1;
+	
+
 	static bool debugging;
 	static int type;
 	static std::ofstream lout;
+	static Level debug_level;
 
-	static void log( std::string msg ){
-		if( debugging ){
-			if( type == STD_OUT ){
-				std::cout << ">>" << msg << std::endl;
-			}
-			else if( type == FILE ){
-				lout << ">>" << msg << std::endl;
-			}
-		}
-	}
+	static void log( std::string msg, Level level = GENERAL );
 
 };
 
@@ -41,7 +41,7 @@ inline std::string printvec2( arma::vec v ){
 	return s.str();
 }
 
-inline vec computeCenterOfMass( const vector<Point *>& points ){
+inline vec computeCenterOfMass( const std::vector<Point *>& points ){
 	vec cg = zeros<vec>(3);
     double M = 0;
     Point *p;
@@ -56,6 +56,10 @@ inline vec computeCenterOfMass( const vector<Point *>& points ){
     cg /= M;
     return cg;
 }
+
+vec idTx( vec q );
+
+vec quadTx( vec q );
 
 }}
 

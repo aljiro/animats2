@@ -7,18 +7,20 @@
 
 #include "util.h"
 #include "gobject.h"
+#include "edge.h"
+#include "face.h"
 
 using namespace arma;
 using namespace std;
-using namespace morph;
 
+namespace morph{ namespace animats{
+
+class GeometricObject;
 
 class MeshProvider{
-private:
-	
+private:	
 
-public:
-		
+public:		
 	//void addFace4( int p1, int p2, int p3, int p4 );
 	void addFace3( GeometricObject*, int p1, int p2, int p3 );
 	void addEdgeUnique( GeometricObject*, Edge& e );
@@ -90,4 +92,5 @@ public:
 	FaceChainLink(ObjMeshProccessChain *next);
 };
 
+}}
 #endif

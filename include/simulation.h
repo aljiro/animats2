@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "solver.h"
 #include "gobject.h"
@@ -15,6 +16,8 @@
 using namespace std;
 
 namespace morph{ namespace animats{
+
+class View;
 
 class Simulation{
 private:
@@ -29,13 +32,17 @@ private:
 	// TO-DO: not sure if I will keep this way of doing it
 	ForceObject *forceChain;
 	// Views to be notified at each step
-	vecotr<View *> views;
+	vector<View *> views;
+	// Collision manager
+	CollisionManager collisionMgr;
 
 	// State variables
 	bool running;
 	unsigned int step;
+	string workingDir;
 
-	Simulation():running(true){}
+
+	Simulation( string workingDir );
 
 public:
 
@@ -43,8 +50,11 @@ public:
 
 	void computeExternalForces();
 	void addView( View *view );
-	void notifyViews();
+	void notifyViews( string msg );
 	void reset();
+	void addForce( ForceObject *fo );
+	void initShapes();
+	void registerObjectsForCollision();
 
 	RigidBody *addRigidBody( int id, string type );
 	SoftBody *addSoftBody( int id );
@@ -52,6 +62,7 @@ public:
 	vector<RigidBody *>& getRigidBodies();
 
 	void run( int maxSteps = -1 );
+	~Simulation();
 };
 
 }}

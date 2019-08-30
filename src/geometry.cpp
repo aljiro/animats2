@@ -1,4 +1,6 @@
-#include "geometry.h"
+#include "../include/geometry.h"
+
+using namespace morph::animats;
 
 // GeometricTransform fields
 GeometricTransform::GeometricTransform(){
@@ -8,7 +10,7 @@ GeometricTransform::GeometricTransform(){
 				{0, 0, 0, 1} };
 }
 
-void GeometricTransform::map( vector<PointMass *>& points ){
+void GeometricTransform::map( vector<Point *>& points ){
 
 	for( Point *p : points ){
 		vec x = {p->x(0), p->x(1), p->x(2), 1};

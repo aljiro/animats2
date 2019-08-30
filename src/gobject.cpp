@@ -1,4 +1,6 @@
-#include "gobject.h"
+#include "../include/gobject.h"
+
+using namespace morph::animats;
 
 // Geometric Object
 // Constructors and operators
@@ -16,12 +18,13 @@ GeometricObject& GeometricObject::operator=( const GeometricObject& go ){
 }
 
 
-void GeometricObject::mapTransform( const GeometricTransform& gt ){
+void GeometricObject::mapTransform( GeometricTransform& gt ){
 	gt.map( this->points );
 }
 
 void GeometricObject::reset(){
-	this->mapTransform( this->initalState.T );
+	// WARNING: RELOAD MESH!
+	this->mapTransform( this->initialState.T );
 
 	for( Point* p : this->points )
 		p->v = this->initialState.v;
@@ -45,13 +48,14 @@ void GeometricObject::addFace( int i1, int i2, int i3, vec normal ){
 	f->normal = normal;
 }
 
-void GeometricObject::init( State initialState, double mass = 1.0 ){      
+void GeometricObject::init( State initialState, double mass ){      
+	Debug::log(string("Initializing geometric object"));
 	int n = this->points.size();
-    double pmass = mass/n;
+    // double pmass = mass/n;
+    double pmass = mass;
 
     for( int i = 0; i < n; i++ ){
-        Point *p = this->points[i];
-        p->mass = pmass;
+        this->points[i]->m = pmass;
     }	
 
     this->initialState = initialState;
@@ -62,15 +66,33 @@ vector<Point *>&  GeometricObject::getPoints(){
 	return this->points;
 }
 
+vector<Face *>& GeometricObject::getFaces(){
+	return this->faces;
+}
+
+vector<Edge>& GeometricObject::getEdges(){
+	return this->edges;
+}
+
+
 // SoftBody
-SoftBody::SoftBody( MeshProvider* mp, double alpha = 0.2 ): GeometricObject(mp), alpha(alpha){
+SoftBody::SoftBody( MeshProvider* mp, double mass, double alpha ): GeometricObject(mp), alpha(alpha){
+	this->type = SOFT;
 	this->shape = new DeformableShape<LinearMatchTransform>( alpha, this->points );
 }
 
-Shape* SoftBody::getShape(){
+DeformableShape<LinearMatchTransform>* SoftBody::getShape(){
 	 return this->shape;
+}
+
+void SoftBody::initShape(){
+
+	this->shape->init( this->points );
+
 }
 
 
 // Rigid body
-RigidBody::RigidBody( MeshProvider *mp ): GeometricObject(mp){}
+RigidBody::RigidBody( MeshProvider *mp ): GeometricObject(mp){
+	this->type = RIGID;
+}

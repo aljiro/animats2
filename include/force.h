@@ -1,11 +1,11 @@
 #ifndef FORCE_H
 #define FORCE_H
 
-#include "simulation.h"
 #include "gobject.h"
+#include "point.h"
 
 namespace morph{
-namespace Animats{
+namespace animats{
 
 class ForceObject{
 private:
@@ -13,11 +13,12 @@ private:
 public:
 	ForceObject( ForceObject *fo );
 	ForceObject *next();
+	void add( ForceObject *fo );
 	
 	void applyForce( GeometricObject* go );
 	// Abstract functions
 	virtual void apply( GeometricObject* go ) = 0;
-	virtual ~ForceObject();
+	//virtual ~ForceObject();
 };
 
 // Concrete force objects

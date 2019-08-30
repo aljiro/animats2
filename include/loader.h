@@ -16,7 +16,9 @@ using namespace arma;
 using namespace tinyxml2;
 
 namespace morph{
-namespace Animats{
+namespace animats{
+
+class Simulation;
 
 class ExperimentParser{
 public:
@@ -27,18 +29,16 @@ public:
 };
 
 class Loader{
-private:
-	Enviroment *enviroment;	
+protected:
 	ExperimentParser ep;
 public:
-	Loader( Enviroment *e );
-	virtual void load( Simulation* s, char *name ) = 0
+	virtual void load( Simulation* s, char *name ) = 0;
 };
 
 class XMLLoader : public Loader{
 private:
-	void addPlane( XMLNode * );
-	void addAnimat( XMLNode * );
+	void addPlane( Simulation *s, XMLNode * );
+	void addAnimat( Simulation *s, XMLNode * );
 public:
 	void load( Simulation *s, char *name );
 };

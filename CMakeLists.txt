@@ -17,15 +17,12 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/include"
 )
 
-add_subdirectory (include)
-
-
 set(ALL_LIBS
 	${OPENGL_LIBRARY}
 	glfw
 	${GLM_LIBRARY}
 	GLEW
-	Armadillo
+	armadillo
 )
 
 file(GLOB SOURCES
@@ -37,15 +34,17 @@ add_executable(animats ${SOURCES})
 target_link_libraries(animats
 	${ALL_LIBS}
 )
+target_link_libraries(animats openblas)
+target_link_libraries(animats lapack)
+
+message("Copying the shaders from")
+message("${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/")
+message("to")
+message("${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/")
 
 add_custom_command( TARGET animats POST_BUILD 
-					COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/source/shaders" 
-					"${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/particles${CMAKE_EXECUTABLE_SUFFIX}")
-
-add_custom_command( TARGET triangles POST_BUILD 
-					COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/triangles${CMAKE_EXECUTABLE_SUFFIX}"
-					"${CMAKE_CURRENT_SOURCE_DIR}/triangles")
-
+					COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders" 
+					"${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/shaders")
 
 
 

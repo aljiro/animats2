@@ -2,9 +2,11 @@
 #define SOLVER_H
 
 #include "simulation.h"
-#include "gbject.h"
+#include "gobject.h"
 
 namespace morph{ namespace animats{
+
+class Simulation;
 
 class Solver{
 private:
@@ -12,7 +14,7 @@ private:
 	double t;
 public:
 	explicit Solver( double h = 0.01 );
-	void step( Simulation *s );
+	void step( Simulation& s );
 };
 
 
