@@ -8,15 +8,18 @@
 #include <list>
 #include <time.h>
 
-#include "contact.h"
 #include "box.h"
+#include "contact.h"
 #include "gobject.h"
 #include "face.h"
+#include "util.h"
 
 using namespace std;
 using namespace arma;
 
 namespace morph{ namespace animats{
+
+
 
 typedef struct {
 	list<int> items;
@@ -36,13 +39,6 @@ typedef struct {
 	int originalIdx;
 } CFace;
 
-typedef struct {
-	double depth;
-	vec faceProjection;
-	CPoint cpoint;
-	CFace cface;
-	int pindex;
-} CollisionInformation;
 
 class CHashTable{
 
@@ -72,9 +68,12 @@ private:
 	map<GeometricObject*, int> objects;
 	// Hash tables
 	CHashTable ht;
+	// Contacts
+	ContactList *contacts;
 
 	// Methods
 	void handleCollisions( CFace cf, CHashItem chi, int step );
+	void storeCollision( CFace& cf, CPoint& cp );
 	void evaluateContacts( CFace cf, int step );
 	void firstPass( int step ); // Hashes points and computes aabb
 	void secondPass( int step ); // Check the faces and handles collisions
@@ -83,8 +82,11 @@ public:
 
 	void clear();
 	void registerObject( GeometricObject *go );
-	vector<Contact *> findCollisions( int step );
-	void pruneContacts( vector<Contact *>& contacts );
+	void findCollisions( int step );
+	void pruneContacts();
+	void solveRegions( int step );
+
+	ContactList *getContactList();
 
 	~CollisionManager();
 };

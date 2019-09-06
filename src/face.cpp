@@ -10,6 +10,7 @@ Face::Face(Point *p1, Point *p2, Point *p3){
 	this->points.push_back( p1 );
 	this->points.push_back( p2 );
 	this->points.push_back( p3 );
+	this->normal = zeros<vec>(3);
 
 	addEdge( 0, 1 );
 	addEdge( 1, 2 );
@@ -56,13 +57,7 @@ void Face::computeNormal( ){
 	The test indicates if one of the extremes of the edge is on the positive 
 	half space of the plane that contains the face
 */
-bool Face::A( Point face_point, vec edge_vector ){
-
-	// cout << "Penetration test:\n-------" << endl;
-	// cout << "Face point: " << printvec(face_point.x) << endl;
-	// cout << "Edge point: " << printvec(edge_vector) << endl;
-	// cout << "Normal: " << printvec(this->normal) << endl;
-
+bool Face::A( Point& face_point, vec edge_vector ){
 	vec u = face_point.x;
 	return dot( this->normal, edge_vector - u ) > 0;
 }
@@ -74,7 +69,7 @@ bool Face::A( Point face_point, vec edge_vector ){
 
 	
 */
-bool Face::B( Point vn, Point vm, Point vl, Point vk ){
+bool Face::B( Point& vn, Point& vm, Point& vl, Point& vk ){
 	vec e_face = vm.x - vn.x;
 	vec e_object = vk.x - vl.x;
 	vec v = vm.x - vk.x;
@@ -121,21 +116,20 @@ bool Face::penetrates( Point *p ){
 /* 
 	Checks the predicates for face piercing.
 */
-PenetrationInfo Face::isPenetrated( const Edge&  e ){
+ bool Face::isPenetrated( const Edge&  e ){
 
 	bool apred_out, apred_in, bpred_out, bpred_in, b, O_out, O_in;
-	PenetrationInfo contact;
 	
 	if( this->recompute ){
-		//Debug::log("Computing normal to the face.");
 		this->computeNormal();
 	}
 
-	apred_out = (not this->A( *(this->points[0]), e.v1->x ) ) && 
+	apred_out = ( !this->A( *(this->points[0]), e.v1->x ) ) && 
 		       		 this->A( *(this->points[0]), e.v0->x );
     //Debug::log("Computing predicate A_in.");
 	apred_in = 	     this->A( *(this->points[0]), e.v1->x ) &&
-		     	(not this->A( *(this->points[0]), e.v0->x ) );
+		     	( !this->A( *(this->points[0]), e.v0->x ) );
+
 	bpred_out = true;
 	bpred_in = true;
 	
@@ -150,11 +144,11 @@ PenetrationInfo Face::isPenetrated( const Edge&  e ){
 	O_out = apred_out && bpred_out;
 	O_in = apred_in && bpred_in;
 
-	contact.result = O_out || O_in;
-	contact.faceEdge = apred_in || apred_out;
-	contact.edgeEdge = bpred_in || bpred_out;
+	bool result = O_out || O_in;
+	bool faceEdge = apred_in || apred_out;
+	bool edgeEdge = bpred_in || bpred_out;
 
-	return contact;
+	return faceEdge; // Returning only the face-edge part of the test
 }
 
 vec Face::faceObjectCentroid( vector<Point *>& face_points ){
@@ -203,6 +197,7 @@ vec Face::getFaceProjection( Edge& e ){
 			   this->points[1]->x + 
 			   this->points[2]->x)/3.0;
 	vec fp_cm;
+
 	if( this->points[0]->pre != NULL ){
 		fp_cm = (this->points[0]->pre->x +
 			   this->points[1]->pre->x + 
@@ -214,8 +209,8 @@ vec Face::getFaceProjection( Edge& e ){
 	vec b = e.v1->x - f_cm;
 	vec g;
 
-	if( norm(e.v1->x - e.v0->x) < 0.001 && norm(f_cm - fp_cm) > 0.01){
-		g = b - f_cm;
+	if( norm(e.v1->x - e.v0->x) < 0.001 ){
+		g = b + f_cm;
 	}else{
 		double tp = -(dot(n, a))/(dot(n, b-a));
 		//tp = 0;
@@ -247,7 +242,6 @@ double Face::getPenetrationDepth2( Edge& e ){
 	vec x0 = this->points[0]->x; // A point in the plane	
 	// We calculate which of the points is in the interior
 	vec u0 = e.v1->x - x0;
-
 
 	//if( dot( u0, this->normal ) < 0 )
 		return abs(dot( u0, this->normal ));

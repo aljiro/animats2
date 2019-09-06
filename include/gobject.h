@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <stdexcept>
 
 #include "shape.h"
 #include "geometry.h"
@@ -13,12 +14,13 @@
 
 namespace morph{ namespace animats{
 
+enum BodyType{RIGID, SOFT, PLANE};
+enum PlanePosition{ Floor, Roof, East, West, Front, Back };
+
 typedef struct{
 	vec v;
 	GeometricTransform T;
 } State;
-
-enum BodyType{RIGID, SOFT};
 
 class MeshProvider;
 
@@ -71,6 +73,14 @@ class RigidBody : public GeometricObject{
 
 public:
 	RigidBody( MeshProvider* mp );
+};
+
+class Plane : public RigidBody{
+private:
+	PlanePosition position;
+public:
+	Plane( MeshProvider* mp, PlanePosition pos );
+	void fixNormal();
 };
 
 }}

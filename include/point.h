@@ -13,6 +13,7 @@ private:
 public:
 	vec x;
 	vec v;
+	vec vi;
 	float m;
 	vec f;
 
@@ -20,7 +21,7 @@ public:
 	Point *pre;
 
 	explicit Point( vec x, float m = 1.0, vec color = {0.5, 0.5, 0.5} );
-	//Point( const Point& p );
+	Point( const Point& p );
 	//Point& operator=( const Point& p ); // Copy assignment operator
 
 	vec getColor();

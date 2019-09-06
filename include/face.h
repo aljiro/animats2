@@ -19,12 +19,6 @@ using namespace arma;
 
 namespace morph{ namespace animats{
 
-typedef struct{
-	bool result;
-	bool faceEdge;
-	bool edgeEdge;
-} PenetrationInfo;
-
 
 class Face{
 
@@ -53,22 +47,23 @@ public:
 		The test indicates if one of the extremes of the edge is on the positive 
 		half space of the plane that contains the face
 	*/
-	bool A( Point face_point, vec edge_vector );
+	bool A( Point& face_point, vec edge_vector );
 	/*
 		Predicate type B. Requires:
 		1. An edge in the face with extremes vn, vm
 		2. An edge of the incident object with extremes vl, vk
 		
 	*/
-	bool B( Point vn, Point vm, Point vl, Point vk );
+	bool B( Point& vn, Point& vm, Point& vl, Point& vk );
 
 	vec project( Edge& e );
 	/* 
 		Checks the predicates for face piercing.
 	*/
-	PenetrationInfo isPenetrated( const Edge&  e );
+	bool isPenetrated( const Edge&  e );
 
 	bool penetrates( Point *p );
+
 	vec faceObjectCentroid( vector<Point *>& face_points );
 	double getPenetrationDepth( Edge& e );
 	double getPenetrationDepth2( Edge& e );

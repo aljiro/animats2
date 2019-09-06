@@ -25,6 +25,8 @@ set(ALL_LIBS
 	armadillo
 )
 
+add_subdirectory(test)
+
 file(GLOB SOURCES
     src/*.cpp
 )

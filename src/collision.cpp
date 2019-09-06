@@ -2,36 +2,53 @@
 
 using namespace morph::animats;
 
-CollisionManager::CollisionManager(){
-
+CollisionManager::CollisionManager():ht(5000,0.2){
+	this->contacts = new ContactList();
 }
 
 void CollisionManager::clear(){
+	// TO-DO: Memory management?
+	indexes.clear();
+	objects.clear();
+	points.clear();
+	faces.clear();
 
+	contacts->clear();
 }
 
-vector<Contact *> CollisionManager::findCollisions(){
-	vector<Contact*> contacts;
+ContactList *CollisionManager::getContactList(){
+	return contacts;
+}
+
+void CollisionManager::findCollisions( int step ){
 	// Hash the points      
 	firstPass( step );
 	// Scan the faces    
 	secondPass( step );
 
-	return contacts;
+	cout<< "Contacts found: "<< contacts->getContacts().size() <<endl;
+}
+
+void CollisionManager::solveRegions( int step ){
+	Debug::log(string("Solving contact solveRegions"), LOOP);
+	for( Contact *c : contacts->getContacts() )
+		c->solveContactRegion();
+
 }
 
 void CollisionManager::registerObject(GeometricObject *go){
 
 	vector<int> objIdxs;
 	Debug::log(string("Registering objects for collision detection"));
-
+	vector<Point*> gPoints = go->getPoints();
+	vector<Face*> gFaces = go->getFaces();
 	// Put all the pointers to points in the corresponding vector
-	for( int i = 0; i < go->getPoints().size(); i++ ){
+	for( int i = 0; i < gPoints.size(); i++ ){
 		
-		objIdxs.push_back( this->getPoints().size() );
+		objIdxs.push_back( this->points.size() );
 
 		CPoint cp;
-		cp.point = go->points[i];
+		cp.point = gPoints[i];
 		cp.go = go;
 		cp.originalIdx = i;
 		this->points.push_back( cp );
@@ -42,7 +59,7 @@ void CollisionManager::registerObject(GeometricObject *go){
 	
 	for( int i = 0; i < go->getFaces().size(); i++ ){
 		CFace cf;
-		cf.face = go->faces[i];
+		cf.face = gFaces[i];
 		cf.go = go;
 		cf.aabb = new Box();
 		cf.originalIdx = i;
@@ -55,12 +72,13 @@ void CollisionManager::registerObject(GeometricObject *go){
 }
 
 void CollisionManager::firstPass( int step ){
+	Debug::log(string("Finding collisions, first pass"), LOOP);
 	for( int i = 0; i < this->points.size(); i++ ){
 		// Add hash
 		CPoint cp = this->points[i];
 		Point *p = cp.point;
 		vector<int> idxs = indexes[cp.go]; 
-		this->ht.hashIn( cp.point->position, i, step );
+		this->ht.hashIn( cp.point->x, i, step );
 	}
 
 	// Compute the bounding boxes
@@ -70,6 +88,8 @@ void CollisionManager::firstPass( int step ){
 }
 
 void CollisionManager::secondPass( int step ){
+	Debug::log(string("Finding collisions, second pass"), LOOP);
+
 	for( int i = 0; i < this->faces.size(); i++ ){		
 		CFace cf = this->faces[i];
 		this->evaluateContacts( cf, step );
@@ -99,40 +119,59 @@ void CollisionManager::evaluateContacts( CFace cf, int step ){
 }
 
 void CollisionManager::handleCollisions( CFace cf, CHashItem chi, int step ){
-	
+	Debug::log(string("Handling collision"), LOOP);
+
 	for( list<int>::iterator it = chi.items.begin(); it != chi.items.end(); ++it ){
 
 		CPoint cp = this->points[*it];
-		PointMass *p = cp.point;		
+		Point *p = cp.point;		
 		
 		if( cp.go == cf.go ) continue;
 		if( p->pre == NULL ) continue;
 
-		this->storeCollision( cp, cf );
+		this->storeCollision( cf, cp );
 	}
 }
 
-void CollisionManaer::storeCollision( CFace& cf, CPoint& cp ){
+void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
 	int i, j;
 
-	PointMass *p = cp.point;
+	Debug::log(string("Storing collision"), LOOP);
+
+	Point *p = cp.point;
 	Edge e( p->pre, p );
-	vec pd = {ht.discretize(p->position(0)), ht.discretize(p->position(1)), ht.discretize(p->position(2))};
+	vec pd = {ht.discretize(p->x(0)), ht.discretize(p->x(1)), ht.discretize(p->x(2))};
 	
-	if( (cf.face->isPenetrated( e ).result || 
+	if( p->pre->x(1)*p->x(1) < 0 ){
+		cout << "Pre:" <<printvec(p->pre->x) << ", pos: " << printvec(p->x) <<"Is penetrated: " << (cf.face->isPenetrated( e ) || 
+		 cf.face->penetrates(p)) << ", Is inside: " <<
+		 (cf.face->isInside(cf.face->getFaceProjection(e)))  <<endl;
+	}
+
+	if( (cf.face->isPenetrated( e ) || 
 		 cf.face->penetrates(p)) && 
 		 cf.face->isInside(cf.face->getFaceProjection(e)) ){
 	// Point p penetrates the face cf.face
 		i = this->objects[ cp.go ];
 		j = this->objects[ cf.go ];
 
-		this->contactRegions.get( i, j ).add( cp );
+		CollisionInformation ci;
+		ci.point = cp.point;
+		ci.face = cf.face;
+		ci.goPoint = cp.go;
+		ci.goFace = cf.go;
+
+		Debug::log(string("Adding contact"), LOOP);
+		this->contacts->add( cp.go, cf.go, ci );
 	}
 }
 
 
-void CollisionManager::pruneContacts( vector<Contact *>& contacts ){
-	
+void CollisionManager::pruneContacts( ){
+	Debug::log(string("Prunning contacts"), LOOP);
+	for( Contact *c : contacts->getContacts() ){
+		c->prunePoints();
+	}	
 }
 
 

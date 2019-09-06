@@ -28,8 +28,10 @@ mat MatchTransform::getApq( vector<Point *>& shapePoints,
 
     mat Apq = zeros<mat>(3,3);
     vec q, p, cm, original_cm;
+    
     cm = computeCenterOfMass( points );
     original_cm = computeCenterOfMass( shapePoints );
+    
 
     for( int i = 0; i < points.size(); i++ ){
         q = (*tx)(shapePoints[i]->x - original_cm);
@@ -66,14 +68,15 @@ mat LinearMatchTransform::getTransform( vector<Point *>& shapePoints,
 	mat U, V, R, Apq, Aqq, A;
 	mat T(3,3, fill::eye);
     vec s;
-    Apq = this->getApq( shapePoints, points, idTx );    
+    Apq = this->getApq( shapePoints, points, idTx ); 
+  
 
     try{
         R = getR( Apq ); // Apq*sqrt(Apq.t()*Apq)
         A = Apq*this->Aqq;
         double da = det(A);
 
-        if( da < 0 )
+        if( da <= 0 )
         {
             cout << "ERROR: determinant < 0" << endl;
             cin.get();
@@ -143,7 +146,6 @@ void DeformableShape<T>::init( std::vector<Point *>& points ){
 	for( Point *p : points ){
 		Point* q = new Point( *p ); // Invoking the copying constructor
 		this->originalShape.push_back( q );
-        cout << printvec(p->x) << endl;
 	}
 }
 

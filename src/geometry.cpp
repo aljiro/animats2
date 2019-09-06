@@ -13,10 +13,16 @@ GeometricTransform::GeometricTransform(){
 void GeometricTransform::map( vector<Point *>& points ){
 
 	for( Point *p : points ){
-		vec x = {p->x(0), p->x(1), p->x(2), 1};
-		vec xp = this->M*x;
-		p->x = {xp(0), xp(1), xp(2)};
+		p->x = mapVec(p->x);
 	}
+}
+
+vec GeometricTransform::mapVec( vec y ){
+	this->M.print();
+	vec x = {y(0), y(1), y(2), 1};
+	vec xp = this->M*x;
+	xp = {xp(0), xp(1), xp(2)};
+	return xp;
 }
 
 void GeometricTransform::compose( GeometricTransform& GT ){
@@ -33,6 +39,11 @@ ScaleTransform::ScaleTransform( double sx, double sy, double sz){
 
 // RotateTransform
 RotateTransform::RotateTransform( double alpha, double beta, double gamma ){
+	const double PI = 3.1416;
+	auto f = []( auto x){return 3.1416*x/180.0;};
+	alpha = f(alpha);
+	beta = f(beta);
+	gamma = f(gamma);
 	mat Rx = { {1, 0, 0, 0}, 
 				 {0, cos(alpha), -sin(alpha), 0}, 
 				 {0, sin(alpha), cos(alpha), 0},

@@ -2,6 +2,7 @@
 #define GEOMETRY_H
 
 #include "point.h"
+#include "util.h"
 #include <vector>
 
 using namespace arma;
@@ -20,6 +21,7 @@ public:
 	   	gt0.compose( gt1 ) => gt0 = gt1*gt0
 	*/	
 	void compose( GeometricTransform& GT );
+	vec mapVec( vec x );
 };
 
 class ScaleTransform : public GeometricTransform{

@@ -28,4 +28,4 @@ void Debug::log( std::string msg, Level level ){
 bool Debug::debugging = true;
 int Debug::type = Debug::STD_OUT;
 std::ofstream Debug::lout;
-Level Debug::debug_level = GENERAL;
+Level Debug::debug_level = LOOP;

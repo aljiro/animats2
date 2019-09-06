@@ -20,6 +20,18 @@ GeometricObject& GeometricObject::operator=( const GeometricObject& go ){
 
 void GeometricObject::mapTransform( GeometricTransform& gt ){
 	gt.map( this->points );
+
+	for( Face *f : faces){
+		if( f->recompute )
+			continue;
+		
+		f->normal = gt.mapVec(f->normal);
+
+		if( this->type == PLANE )
+			((Plane *)this)->fixNormal();
+	}
+
+	cout<<"Finish faces tx"<<endl;
 }
 
 void GeometricObject::reset(){
@@ -86,7 +98,6 @@ DeformableShape<LinearMatchTransform>* SoftBody::getShape(){
 }
 
 void SoftBody::initShape(){
-
 	this->shape->init( this->points );
 
 }
@@ -96,3 +107,28 @@ void SoftBody::initShape(){
 RigidBody::RigidBody( MeshProvider *mp ): GeometricObject(mp){
 	this->type = RIGID;
 }
+
+// Plane
+Plane::Plane( MeshProvider* mp, PlanePosition pos ):RigidBody(mp), position(pos){
+	this->type = PLANE;
+}
+
+void Plane::fixNormal(){
+	vec dir;
+
+	switch( position ){
+		case Floor:
+			dir = {0, 1, 0};
+			break;
+		case Roof:
+			dir = {0, -1, 0};
+			break;
+		default:
+			throw std::invalid_argument( "Unsupported plane orientation" );
+	}
+
+	for( Face *f : faces ){
+		if( dot(f->normal, dir) < 0 )
+			f->normal = -f->normal;
+	}
+} 

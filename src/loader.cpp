@@ -51,15 +51,18 @@ void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 
 		if( strcmp( elementName, "scale") == 0 ){
 			vec sc = ep.parseVector( element->GetText() );
-			ScaleTransform sct( sc(0), sc(1), 0 );
+			ScaleTransform sct( sc(0), sc(1), 1.0 );
 			gt.compose( sct );
 		}else if( strcmp( elementName, "position" ) == 0 ){
 			vec pos = ep.parseVector( element->GetText() );
 			TranslateTransform tt( pos(0), pos(1), pos(2) );
 			gt.compose( tt );
 		}else if( strcmp( elementName, "rotation" ) == 0 ){
+
 			vec angles = ep.parseVector( element->GetText() );
-			RotateTransform rt( angles(0), angles(1), angles(2) );
+			
+			RotateTransform rt( angles(0), angles(1), angles(2));
+			Debug::log(string("Rotating rigid: ")+printvec(angles));
 			gt.compose( rt );
 		}else if( strcmp( elementName, "collitionable" ) == 0 ){
 			bool c = ep.parseBool( element->GetText() );

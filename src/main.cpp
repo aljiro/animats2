@@ -24,6 +24,6 @@ int main( int argc, char** args ){
 	GravityForce *gf = new GravityForce(NULL);
 	s->addForce( gf );
 	s->addView( sview );
-	s->initShapes();
-	s->run( 500 );
+	s->reset();
+	s->run( 1000 );
 }

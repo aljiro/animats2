@@ -22,8 +22,6 @@ class View;
 class Simulation{
 private:
 	// Objects
-	// Holds the active contacts in the simulation
-	vector<Contact *> contacts;
 	// Softbodies and rigid bodies are 
 	// potentially treated differently
 	vector<SoftBody *> softBodies;

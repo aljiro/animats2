@@ -10,11 +10,7 @@ Simulation::Simulation( string workingDir ):running(false), workingDir(workingDi
 // Public 
 void Simulation::computeExternalForces(){
 	Debug::log(string("Adding contact forces"), LOOP );
-
-	for( vector<Contact *>::iterator it = this->contacts.begin(); 
-		 it != contacts.end(); ++it){
-		(*it)->resolve();
-	}
+	collisionMgr.getContactList()->resolveForces();	
 
 	if( this->forceChain == NULL )
 		return;
@@ -28,7 +24,7 @@ void Simulation::computeExternalForces(){
 		this->forceChain->applyForce( go );
 }
 
-void Enviroment::registerObjectsForCollision(){
+void Simulation::registerObjectsForCollision(){
     Debug::log(string("Registering rigid bodies"));
     collisionMgr.clear();
     
@@ -51,14 +47,15 @@ void Simulation::addForce( ForceObject *fo ){
 }
 void Simulation::reset(){
 
-	for(  SoftBody *sb : softBodies ){
-		sb->reset();
-	}
+	// for(  SoftBody *sb : softBodies ){
+	// 	sb->reset();
+	// }
 
-	for( RigidBody *rb : rigidBodies ){
-		rb->reset();
-	}
+	// for( RigidBody *rb : rigidBodies ){
+	// 	rb->reset();
+	// }
 
+	initShapes();
 	registerObjectsForCollision();
 }
 
@@ -76,10 +73,11 @@ void Simulation::run( int maxSteps ){
 	this->running = true;
 
 	while( this->running ){
-		this->contacts = collisionMgr.findCollisions();
+		collisionMgr.findCollisions( this->step );
+		collisionMgr.solveRegions( this->step );
 		Debug::log(string("Solver step"), LOOP );
 		solver.step( *this );
-		collisionMgr.pruneContacts( this->contacts );
+		collisionMgr.pruneContacts();
 		Debug::log(string("Notifying views"), LOOP );
 		this->notifyViews( string("Simulation step: ") + to_string(this->step) );
 		this->step++;
@@ -92,13 +90,17 @@ void Simulation::run( int maxSteps ){
 RigidBody* Simulation::addRigidBody( int id, string type ){
 	Debug::log(string("Adding a new rigid body"));
 	MeshProvider *mp;
+	RigidBody* rb;
 
-	if( type == "plane" )
+	if( type == "plane" ){
 		mp = new PlaneMeshProvider();
-	else
-		return NULL;
+		rb = new Plane( mp, Floor );
+	}else{
+		mp = new PlaneMeshProvider();
+		rb = new RigidBody( mp );
+	}
 
-	RigidBody* rb = new RigidBody( mp );
+	
 	this->rigidBodies.push_back( rb );
 	return rb;
 }

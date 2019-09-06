@@ -3,6 +3,8 @@
 
 #include "simulation.h"
 #include "gobject.h"
+#include "util.h"
+#include "point.h"
 
 namespace morph{ namespace animats{
 
