@@ -155,7 +155,7 @@ bool FaceChainLink::doProcess( FILE *f, char *s, GeometricObject* go ){
 		float x, y, z;
 		fscanf(f, "%f %f %f\n", &x, &y, &z );
 		vec pos = { x, y, z };
-		//cout << "Adding normal: "<<printvec(pos)<<endl;
+		cout << "Adding normal: "<<printvec(pos)<<endl;
 		this->normals.push_back( pos );
 		return true;
 	}
@@ -168,12 +168,8 @@ bool FaceChainLink::doProcess( FILE *f, char *s, GeometricObject* go ){
 	    //     cerr<<"Error in the format of the mesh file"<<endl;
 	    //     return false;
 	    // }
-
-	    vi--;
-	    vj--;
-	    vk--;
 	    //cout << "Adding face: "<< vi << ", "<< vj << ", "<< vk <<endl;
-	    go->addFace( vi, vj, vk, normals[nk] );
+	    go->addFace( --vi, --vj, --vk, normals[--nk] );
 
 	    return true;
 	}

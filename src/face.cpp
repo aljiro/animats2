@@ -4,6 +4,10 @@ using namespace morph::animats;
 using namespace arma;
 
 Face::Face(Point *p1, Point *p2, Point *p3){
+	this->init( p1, p2, p3 );
+}
+
+void Face::init( Point *p1, Point *p2, Point *p3 ){
 	this->recompute = true;
 	this->iscontact = false;
 	
@@ -15,6 +19,10 @@ Face::Face(Point *p1, Point *p2, Point *p3){
 	addEdge( 0, 1 );
 	addEdge( 1, 2 );
 	addEdge( 2, 0 );
+}
+
+Face::Face( const Face& p ){
+	this->init( p.points[0], p.points[1], p.points[2] );
 }
 
 void Face::setIndexes( int i1, int i2, int i3 ){
@@ -40,7 +48,7 @@ void Face::computeNormal( ){
 	Point& e3 = *(this->points[2]);
 
 	vec u1 = e1.x - e2.x;
-	vec u2 = e2.x - e3.x;
+	vec u2 = e1.x - e3.x;
 
 	this->normal = cross( u1, u2 );	
 	double n = norm(this->normal);
@@ -224,13 +232,13 @@ vec Face::getFaceProjection( Edge& e ){
 }
 
 vec Face::getFaceProjection2( Edge& e ){
-	vec x0 = this->points[0]->x; // A point in the plane	
-	// We calculate which of the points is in the interior
-	vec u0 = e.v1->x - x0;
+	
+	vec u = this->normal/norm(this->normal);
+	mat P = eye(3,3) - u*u.t();
 
 
 	//if( dot( u0, this->normal ) < 0 )
-		return  e.v1->x + abs(dot( u0, this->normal ))*this->normal;
+		return  P*( e.v1->x - this->getCentroid()) + this->getCentroid();
 	//else
 	//	return 0;
 }
@@ -239,14 +247,16 @@ vec Face::getFaceProjection2( Edge& e ){
  // Old penetration depth
 double Face::getPenetrationDepth2( Edge& e ){
 
-	vec x0 = this->points[0]->x; // A point in the plane	
-	// We calculate which of the points is in the interior
-	vec u0 = e.v1->x - x0;
+	vec u = this->normal/norm(this->normal);
+	mat P = u*u.t();
+
 
 	//if( dot( u0, this->normal ) < 0 )
-		return abs(dot( u0, this->normal ));
+	vec px = P*( e.v1->x - this->getCentroid() );
+	return norm(px);
 	//else
 	//	return 0;
+
 }
 
 // Pointing outwards
@@ -261,7 +271,7 @@ void Face::fixNormalOrientation( vector<Point *>& face_points ){
 
 	vv -= x0;
 
-	cout << "Fixing normal: " << printvec(x0) << " and " << printvec(this->normal) << endl;
+	// cout << "Fixing normal: " << printvec(x0) << " and " << printvec(this->normal) << endl;
 
 	if( dot(vv, this->normal) > 0 )
 		this->normal = -this->normal;

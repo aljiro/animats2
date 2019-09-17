@@ -34,6 +34,8 @@ public:
 	bool iscontact;
 
 	Face(Point *p1, Point *p2, Point *p3);
+	Face( const Face& p );
+	void init( Point *p1, Point *p2, Point *p3 );
 
 	/*
 		Computes the normal vector to the face for a particular 

@@ -15,6 +15,9 @@ int SimView::init(){
 	Debug::log(string("Initializing SimView"));
 	this->width = 1024;
 	this->height = 768;
+	this->lightColor = new GLfloat[3]{1,1,1};
+	// this->lightPower = 0.5;
+	this->lightPosition = new GLfloat[3]{3,3,3};
 		// Initialise GLFW
     if( !glfwInit() )
     {
@@ -64,27 +67,17 @@ void SimView::createBuffer( GeometricObject *go ){
 	vector<Face*> faces = go->getFaces();	
 	const int N = 3*3*faces.size();
 	GLfloat shape[N];
-	int c = 0;
-
-	for( int i = 0; i < faces.size(); i++ )
-	{
-		for( int j = 0; j < 3; j++ ){
-			shape[c] = (GLfloat)(faces[i]->points[j]->x[0]);
-			shape[c+1] = (GLfloat)(faces[i]->points[j]->x[1]);
-			shape[c+2] = (GLfloat)(faces[i]->points[j]->x[2]);
-
-			c+= 3;
-		}
-	}
+	GLfloat normals[N];
+	this->collectObjectShape( go, shape, normals );
 
 	glGenVertexArrays( 1, &(go->VAO) );
+	glBindVertexArray( go->VAO );	
 	cout << "VAO: " << go->VAO <<endl;
 	glGenBuffers( 1, &(go->VBO) );	
 	cout << "VBO: " << go->VBO <<endl;
 	glBindBuffer( GL_ARRAY_BUFFER, go->VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(shape), shape, GL_STATIC_DRAW );
-	glBindVertexArray( go->VAO );	
-
+	glEnableVertexAttribArray( 0 );
 	glVertexAttribPointer( 0, 
 						   3, 
 						   GL_FLOAT, 
@@ -93,21 +86,36 @@ void SimView::createBuffer( GeometricObject *go ){
 						   (void*)0 );
 	
 
-	glEnableVertexAttribArray( 0 );
+	
+	glGenBuffers(1, &(go->normalBuffer));
+	glBindBuffer(GL_ARRAY_BUFFER, go->normalBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, go->normalBuffer);
+	glVertexAttribPointer(
+	 1,                                // attribute
+	 3,                                // size
+	 GL_FLOAT,                         // type
+	 GL_FALSE,                         // normalized?
+	 0,                                // stride
+	 (void*)0                          // array buffer offset
+	);
+
 	glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
 }
 
 void SimView::transformations( GLuint programId ){
     glm::mat4 P = glm::perspective( glm::radians(45.0f), (float)width/(float)height, 0.1f, 100.0f );
-    glm::mat4 V = glm::lookAt( glm::vec3(1, 1, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0) );
-    glm::mat4 M = glm::mat4(0.1f);
-    this->mvp = P*V*M;
+    this->V = glm::lookAt( glm::vec3(1, 0.5, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0) );
+    this->M = glm::mat4(0.1f);
+    this->MVP = P*this->V*this->M;
 }
 
 // Drawing routines
 void SimView::setup( Simulation &s ){
-	Debug::log(string("Creating buffers"));
+	Debug::log(string("Setting up graphics"));
 	// Initializing buffers for each object
 	vector<SoftBody *>& softBodies = s.getSoftBodies();
 	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
@@ -126,56 +134,60 @@ void SimView::setup( Simulation &s ){
 							 	  "shaders/AnimatFragmentShader.fsh" );
 	glUseProgram( this->shaderId );
 	transformations( this->shaderId );
+
 	this->colorId = glGetUniformLocation( this->shaderId, "color" );
 	this->matrixId = glGetUniformLocation( this->shaderId, "MVP" );
+	this->viewId = glGetUniformLocation( this->shaderId, "V" );
+	this->modelId = glGetUniformLocation( this->shaderId, "M" );
+	// this->lightPowerId = glGetUniformLocation( this->shaderId, "lightColor" );
+	this->lightColorId = glGetUniformLocation( this->shaderId, "lightColor" );
+	this->lightPositionId = glGetUniformLocation( this->shaderId, "lightPosition" );
+	
 }
 
-GLfloat* SimView::collectObjectShape( GeometricObject *go ){
-
-	vector<Point*> points = go->getPoints();	
-	const int N = 3*points.size();
-
-	GLfloat *shape = (GLfloat *)malloc(N*sizeof(GLfloat));
-	int c = 0;
-
-	for( int i = 0; i < points.size(); i++ )
-	{
-		shape[c] = (GLfloat)(points[i]->x[0]);
-		shape[c+1] = (GLfloat)(points[i]->x[1]);
-		shape[c+2] = (GLfloat)(points[i]->x[2]);
-
-		c+= 3;
-	}
-
-	return  shape;
-}
-
-
-void SimView::drawObject( GeometricObject *go , int colorId){
-	Debug::log(string("Collecting object shape"), LOOP);
-
-	// GLfloat shape[] = {
-	//    -1.0f, -1.0f, 0.0f,
-	//    -1.0f, 1.0f, 0.0f,
-	//     0.8f, -1.0f, 0.0f,
-	//     1.0f, -1.0f, 0.0f,
-	//     1.0f, 1.0f, 0.0f,
-	//     -0.8f, 1.0f, 0.0f
-	// };
-
-	// GLfloat *shape = collectObjectShape( go );	
+void SimView::collectObjectShape( GeometricObject *go, GLfloat *shape, GLfloat *normals ){
 
 	vector<Face*> faces = go->getFaces();	
 	const int N = 3*3*faces.size();
-	GLfloat shape[N];
 	int c = 0;
 
 	for( int i = 0; i < faces.size(); i++ )
 	{
 		for( int j = 0; j < 3; j++ ){
 			shape[c] = (GLfloat)(faces[i]->points[j]->x[0]);
+			normals[c] = (GLfloat)(faces[i]->normal[0]);
 			shape[c+1] = (GLfloat)(faces[i]->points[j]->x[1]);
+			normals[c+1] = (GLfloat)(faces[i]->normal[1]);
 			shape[c+2] = (GLfloat)(faces[i]->points[j]->x[2]);
+			normals[c+2] = (GLfloat)(faces[i]->normal[2]);
+
+			c+= 3;
+		}
+	}
+}
+
+
+void SimView::drawObject( GeometricObject *go , int colorId){
+	Debug::log(string("Collecting object shape"), LOOP);
+
+	// Sending vertices to opengl
+	glBindVertexArray( go->VAO );
+	
+	vector<Face*> faces = go->getFaces();	
+	const int N = 3*3*faces.size();
+	GLfloat shape[N];
+	GLfloat normals[N];
+	int c = 0;
+
+	for( int i = 0; i < faces.size(); i++ )
+	{
+		for( int j = 0; j < 3; j++ ){
+			shape[c] = (GLfloat)(faces[i]->points[j]->x[0]);
+			normals[c] = (GLfloat)(faces[i]->normal[0]);
+			shape[c+1] = (GLfloat)(faces[i]->points[j]->x[1]);
+			normals[c+1] = (GLfloat)(faces[i]->normal[1]);
+			shape[c+2] = (GLfloat)(faces[i]->points[j]->x[2]);
+			normals[c+2] = (GLfloat)(faces[i]->normal[2]);
 
 			c+= 3;
 		}
@@ -187,34 +199,83 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	glBindBuffer( GL_ARRAY_BUFFER, go->VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(shape), shape, GL_STATIC_DRAW );
 	
+	glVertexAttribPointer( 0, 
+						   3, 
+						   GL_FLOAT, 
+						   GL_FALSE, 
+						   0, // stride 
+						   (void*)0 );
+	
+	// Sending normals
+	// Debug::log(string("Collecting normals"), LOOP);
+	// const int n = go->faces.size();
+	// vector<glm::vec3> normals;
+
+	// for( int i = 0; i < n; i++ ){
+	// 	Face *f = go->faces[i];
+
+	// 	if( f->normal.n_elem != 3 ){
+	// 		Debug::log(string("WARNING: defective normal found!"));		
+	// 		f->normal = {0, 1, 0};
+	// 	}
+
+	// 	glm::vec3 cn;
+	// 	cn.x = f->normal(0);
+	// 	cn.y = f->normal(1);
+	// 	cn.z = f->normal(2);
+
+	// 	normals.push_back( cn ); 
+	// }
+
+	Debug::log(string("Binding normals"), LOOP);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, go->normalBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(
+	 1,                                // attribute
+	 3,                                // size
+	 GL_FLOAT,                         // type
+	 GL_FALSE,                         // normalized?
+	 0,                                // stride
+	 (void*)0                          // array buffer offset
+	);
 
 	Debug::log(string("Passing variables to the shader"), LOOP);
 	GLfloat color_soft[4] = {0.5f, 0.1f, 0.0f, 1.0f}; // Set according to heat
 	GLfloat color_hard[4] = {0.5f, 0.5f, 0.5f, 1.0f}; // Set according to heat
 	
+	//glUseProgram( this->shaderId );
+
+	// Setting uniforms
 	if( colorId == 1 )
 		glUniform4fv( this->colorId, 1, color_soft );
 	else
 		glUniform4fv( this->colorId, 1, color_hard );
 
-	glUniformMatrix4fv( this->matrixId, 1, GL_FALSE, &mvp[0][0] );
-	Debug::log(string("Drawing..."), LOOP);
+	glUniformMatrix4fv( this->matrixId, 1, GL_FALSE, &MVP[0][0] );
+	glUniformMatrix4fv( this->viewId, 1, GL_FALSE, &(this->V[0][0]) );
+	glUniformMatrix4fv( this->modelId, 1, GL_FALSE, &(this->M[0][0]) );
+	// glUniform4fv( this->lightPowerId, 1, &this->lightPower );
+	glUniform3fv( this->lightColorId, 1, this->lightColor );
+	glUniform3fv( this->lightPositionId, 1, this->lightPosition );
 
-	glBindVertexArray( go->VAO );
+	Debug::log(string("Drawing..."), LOOP);
+	
 	glDrawArrays( GL_TRIANGLES, 0, faces.size()*3 );
-	glBindVertexArray(0);
 }
 
 void SimView::notify( Simulation& s, std::string message ){
-	Debug::log(string("SimView Notified."), LOOP);
+	Debug::log(string("SimView Noti/fied."), LOOP);
 	this->draw( s );
 	glfwSetWindowTitle(this->window, message.c_str() );
 }
 
 void SimView::draw( Simulation& s ){
 	Debug::log(string("Drawing objects: setting up"), LOOP);
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glBlendFunc( GL_SRC_ALPHA, GL_ONE );
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -223,12 +284,10 @@ void SimView::draw( Simulation& s ){
 	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
 	Debug::log(string("Drawing objects: Rigid bodies"), LOOP);
 
-	
 	for( RigidBody *rb : rigidBodies ){
 		drawObject( rb, 0 );
 	}
 	
-
 	Debug::log(string("Drawing objects: Soft bodies"), LOOP);
 	for( SoftBody *sb : softBodies ){
 		drawObject( sb, 1 );

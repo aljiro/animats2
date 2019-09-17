@@ -25,8 +25,6 @@ void CollisionManager::findCollisions( int step ){
 	firstPass( step );
 	// Scan the faces    
 	secondPass( step );
-
-	cout<< "Contacts found: "<< contacts->getContacts().size() <<endl;
 }
 
 void CollisionManager::solveRegions( int step ){
@@ -54,7 +52,7 @@ void CollisionManager::registerObject(GeometricObject *go){
 		this->points.push_back( cp );
 	}
 
-	cout << this->points.size() <<  " points registered. "<<endl;
+	// cout << this->points.size() <<  " points registered. "<<endl;
 	Debug::log(string("Registering faces"));
 	
 	for( int i = 0; i < go->getFaces().size(); i++ ){
@@ -66,7 +64,7 @@ void CollisionManager::registerObject(GeometricObject *go){
 		this->faces.push_back( cf );
 	}
 
-	cout << this->faces.size() << " faces registered " << endl;
+	// cout << this->faces.size() << " faces registered " << endl;
 	this->indexes[go] = objIdxs;
 	this->objects[go] = this->objects.size();
 }
@@ -142,11 +140,11 @@ void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
 	Edge e( p->pre, p );
 	vec pd = {ht.discretize(p->x(0)), ht.discretize(p->x(1)), ht.discretize(p->x(2))};
 	
-	if( p->pre->x(1)*p->x(1) < 0 ){
-		cout << "Pre:" <<printvec(p->pre->x) << ", pos: " << printvec(p->x) <<"Is penetrated: " << (cf.face->isPenetrated( e ) || 
-		 cf.face->penetrates(p)) << ", Is inside: " <<
-		 (cf.face->isInside(cf.face->getFaceProjection(e)))  <<endl;
-	}
+	// if( p->pre->x(1)*p->x(1) < 0 ){
+	// 	cout << "Pre:" <<printvec(p->pre->x) << ", pos: " << printvec(p->x) <<"Is penetrated: " << (cf.face->isPenetrated( e ) || 
+	// 	 cf.face->penetrates(p)) << ", Is inside: " <<
+	// 	 (cf.face->isInside(cf.face->getFaceProjection(e)))  <<endl;
+	// }
 
 	if( (cf.face->isPenetrated( e ) || 
 		 cf.face->penetrates(p)) && 

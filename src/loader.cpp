@@ -128,12 +128,13 @@ void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 	state.v = {0,0,0};
 	state.T = gt;
 	a->init( state );
+	cout << "Animat added: " << a->getPoints().size() << " points, " << a->getFaces().size() << " faces. " << endl;
 }
 
 // ExperimentParser
 vec ExperimentParser::parseVector( const char *element ){
 	string item(element);
-	regex re("^\\(([0-9]+.[0-9]*),([0-9]+.[0-9]*),([0-9]+.[0-9]*)\\)");
+	regex re("^\\((-*[0-9]+.[0-9]*),(-*[0-9]+.[0-9]*),(-*[0-9]+.[0-9]*)\\)");
 	std::smatch match;
 	std::regex_search(item, match, re);
 	vec v = {0, 0, 0};

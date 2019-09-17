@@ -20,10 +20,22 @@ class SimView : public View{
 private:
 	GLFWwindow* window;
 	GLuint shaderId;
+	// Uniform identifiers
 	GLuint colorId;
 	GLuint matrixId;
-	glm::mat4 mvp;
+	GLuint viewId;
+	GLuint modelId;
+	GLuint lightPowerId;
+	GLuint lightColorId;
+	GLuint lightPositionId;
+
+	glm::mat4 MVP;
+	glm::mat4 M;
+	glm::mat4 V;
 	int width, height;
+	float lightPower;
+	GLfloat *lightColor;
+	GLfloat *lightPosition;
 
 public:
 	SimView( Simulation& s );
@@ -32,7 +44,7 @@ public:
 	void draw(  Simulation& s );
 	void drawObject( GeometricObject go[], int colorId);
 	void createBuffer( GeometricObject *go );
-	GLfloat* collectObjectShape( GeometricObject *go );
+	void collectObjectShape( GeometricObject *go,  GLfloat *shape, GLfloat *normals );
 	void notify( Simulation& s, std::string message );
 	char* checkErrors();
 	void transformations( GLuint programId );

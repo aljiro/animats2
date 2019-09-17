@@ -31,8 +31,7 @@ private:
 	ForceObject *forceChain;
 	// Views to be notified at each step
 	vector<View *> views;
-	// Collision manager
-	CollisionManager collisionMgr;
+	
 
 	// State variables
 	bool running;
@@ -43,6 +42,9 @@ private:
 	Simulation( string workingDir );
 
 public:
+
+	// Collision manager
+	CollisionManager collisionMgr;
 
 	static Simulation* load( char* name );
 

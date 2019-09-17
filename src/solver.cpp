@@ -30,16 +30,13 @@ void Solver::step( Simulation& s ){
 			vec f = points[i]->f;
 			double m = points[i]->m;
 
-			if( norm(x - g) > 0.12 ){
-				points[i]->x = points[i]->pre->x;
-				points[i]->v = zeros<vec>(3);
-				// cin.get();
-				return;
-			}
 
 			if( points[i]->move )
-				points[i]->pre = new Point(*(points[i]));// Copy
-			
+				points[i]->pre = new Point(*(points[i]));
+			else{
+				points[i]->pre->v =  zeros<vec>(3);
+				points[i]->v = zeros<vec>(3) ;
+			}			
 
 			// Modified Euler
 			// points[i]->vi = 
@@ -48,14 +45,34 @@ void Solver::step( Simulation& s ){
 			
 			// Call prune constants here;
 			this->t += h;
+			
+		}
+	}
+
+	Debug::log(string("Prunning contacts"), LOOP );
+	s.collisionMgr.pruneContacts();
+
+	Debug::log(string("Moving points"), LOOP );
+
+		// Move soft bodies
+	for( SoftBody *go : s.getSoftBodies() ){
+		points = go->getPoints();
+
+		for( int i = 0; i < points.size(); i++ ){			
 
 			if( !points[i]->move ){
 				continue;
 			}
 			
-			points[i]->x += h*points[i]->v;
+			points[i]->x += h*points[i]->v;	
 
-			
+
+			// if( norm(points[i]->x - points[i]->pre->x) > 0.12 ){
+			// 	points[i]->x = points[i]->pre->x;
+			// 	points[i]->v = zeros<vec>(3);
+			// 	// cin.get();
+			// 	return;
+			// }		
 		}
 
 		Debug::log(string("Euler step done!"), LOOP );

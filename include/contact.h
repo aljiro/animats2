@@ -70,6 +70,8 @@ public:
 	// bool evaluateRegion();
 	void addCollision( CollisionInformation ci );
 	void prunePoints();
+	bool isContactRegionValid();
+	void computeSeparatingPlane();
 	void solveContactRegion();
 	void resolve();
 };

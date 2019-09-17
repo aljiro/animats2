@@ -38,6 +38,7 @@ public:
 	// Graphic objects
 	GLuint VBO;
 	GLuint VAO;
+	GLuint normalBuffer;
 
 	GeometricObject( MeshProvider* mp );
 	GeometricObject( const GeometricObject& go ); // Copy constructor
@@ -56,6 +57,7 @@ public:
 	vector<Edge>& getEdges();
 
 	friend class MeshProvider;
+	friend class SimView;
 };
 
 class SoftBody : public GeometricObject{

@@ -75,9 +75,9 @@ void Simulation::run( int maxSteps ){
 	while( this->running ){
 		collisionMgr.findCollisions( this->step );
 		collisionMgr.solveRegions( this->step );
-		Debug::log(string("Solver step"), LOOP );
+		Debug::log(string("Solver step"), LOOP );		
 		solver.step( *this );
-		collisionMgr.pruneContacts();
+		//collisionMgr.pruneContacts();
 		Debug::log(string("Notifying views"), LOOP );
 		this->notifyViews( string("Simulation step: ") + to_string(this->step) );
 		this->step++;
