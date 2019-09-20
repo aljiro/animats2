@@ -30,6 +30,9 @@ void XMLLoader::load( Simulation *s, char *dir ){
 		else if( strcmp( element, "animat" ) == 0 ){
 			Debug::log(string("Adding an animat"));
 			this->addAnimat( s, it );
+		}else if( strcmp( element, "view" ) == 0 ){
+			Debug::log(string("Adding a simview"));
+			this->addView( s, it );
 		}
 		else // error
 			Debug::log("Unrecognized node in the experiment file.");
@@ -79,6 +82,16 @@ void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 	p->init( state, 100000 );	
 }
 
+void XMLLoader::addView( Simulation *s, XMLNode * node ){
+	Debug::log(string("Initializing the view to be added"));
+	SimView *sview = new SimView( *s );
+	XMLElement* element =  node->ToElement();	
+	vec p = ep.parseVector( element->GetText() );
+	Debug::log(string("Setting viewport"));
+	sview->setViewPort(p);
+	s->addView( sview );
+}
+
 void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 	
 	Debug::log(string("Obtaining first child"));
@@ -87,9 +100,11 @@ void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 	int id = node->ToElement()->IntAttribute("id");
 	int rate = node->ToElement()->IntAttribute("rate");
 	int max_num = node->ToElement()->IntAttribute("max");
+	bool c = node->ToElement()->BoolAttribute("visible");
 
 	Debug::log(string("Adding animat to the enviroment"));
 	SoftBody *a = s->addSoftBody( id );
+	a->setVisible( c );
 	Debug::log(string("Starting iteration"));
 
 	GeometricTransform gt;
@@ -115,9 +130,8 @@ void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 			gt.compose( rt );
 		}else if( strcmp( elementName, "softness" ) == 0 ){
 			double s = ep.parseDouble( element->GetText() );
-			Debug::log(string("Softess: "));
-			cout << s << endl;
-			a->getShape()->setAlpha( s );
+			
+			a->getShape()->setAlpha( s );		
 		}else
 			Debug::log("Unrecognized plane options");// exception
 

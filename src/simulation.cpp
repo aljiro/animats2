@@ -57,6 +57,9 @@ void Simulation::reset(){
 
 	initShapes();
 	registerObjectsForCollision();
+	Debug::log(string("Setting up the views"));	
+	for( View *v : views)
+		v->setup( *this );
 }
 
 vector<SoftBody *>& Simulation::getSoftBodies(){
@@ -65,6 +68,10 @@ vector<SoftBody *>& Simulation::getSoftBodies(){
 
 vector<RigidBody *>& Simulation::getRigidBodies(){
 	return this->rigidBodies;
+}
+
+void Simulation::close(){
+	this->running = false;
 }
 
 void Simulation::run( int maxSteps ){
@@ -117,6 +124,7 @@ SoftBody* Simulation::addSoftBody( int id ){
 	Debug::log(string("Adding a new soft body"));
 	string path = this->workingDir + string("/mesh.obj");
 	SoftBody *s = new SoftBody( new ObjMeshProvider( path.c_str() ) );
+	s->setId( id );
 	this->softBodies.push_back( s );
 	return s;
 }

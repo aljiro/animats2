@@ -25,11 +25,13 @@ typedef struct{
 class MeshProvider;
 
 class GeometricObject{
+private:
+	int id;
+	bool visible;
 protected:
 	
 	vector<Face *> faces;
 	vector<Edge> edges;
-
 	State initialState;
 	vector<Point *> points;
 
@@ -49,6 +51,11 @@ public:
 	void addPoint( vec position );
     void addFace( int i1, int i2, int i3 );
     void addFace( int i1, int i2, int i3, vec normal );
+    // Property access
+    void setId( int id );
+    int getId( );
+    void setVisible( bool v );
+    bool isVisible();
 
     virtual void init( State initialState, double mass = 1.0 );
 

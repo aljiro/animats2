@@ -30,8 +30,7 @@ private:
 	// TO-DO: not sure if I will keep this way of doing it
 	ForceObject *forceChain;
 	// Views to be notified at each step
-	vector<View *> views;
-	
+	vector<View *> views;	
 
 	// State variables
 	bool running;
@@ -55,6 +54,7 @@ public:
 	void addForce( ForceObject *fo );
 	void initShapes();
 	void registerObjectsForCollision();
+	void close();
 
 	RigidBody *addRigidBody( int id, string type );
 	SoftBody *addSoftBody( int id );

@@ -12,6 +12,7 @@ class View{
 
 public:
 	virtual void notify( Simulation& s, std::string message ) = 0;
+	virtual void setup( Simulation& s ) = 0;
 };
 
 }}

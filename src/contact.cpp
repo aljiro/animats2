@@ -76,6 +76,7 @@ Contact::~Contact(){
 SignoriniContact::SignoriniContact( SoftBody *sb, RigidBody *rb ):Contact( sb, rb ){
 }
 
+
 void SignoriniContact::addCollision( CollisionInformation ci ){
 	// TO-DO: check if already exists?
 	bool found = false;
@@ -129,16 +130,23 @@ void SignoriniContact::prunePoints(){
 		Face *f = (*it).face;
 
 		// Normal pressure
+		double vel = dot(p->v, f->normal);
 		double acc = dot(p->v - p->pre->v, f->normal);
 		
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  acc  > -0.07 && norm(p->v) > 0.05 ){
+		if(  (acc  > -0.07 || vel > 0) && norm(p->v) > 0.05 ){
 
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
 			Debug::log(string("Erasing contact"), LOOP);
 			toDel.push_back(it);
 			Debug::log(string("Done"), LOOP);
+		}else{
+			vec u = f->normal/norm(f->normal);
+			mat Pr = eye(3,3) - u*u.t();
+			p->pre->v = Pr*p->pre->v;
+			p->v = 0.1*Pr*p->v;
+
 		}
 	}
 
@@ -178,6 +186,68 @@ void DeformableContact::addCollision( CollisionInformation ci ){
 		collisionsA.push_back( ci );
 	else
 		collisionsB.push_back( ci );
+
+	this->react = false;
+}
+
+bool DeformableContact::isContactRegionValid(){
+	bool valid = true;
+	
+	for( CollisionInformation ci : collisionsA ){
+		Point *p = ci.point;
+		Face *f = ci.face;
+		Edge e( p->pre, p );
+
+		// if( !f->isInside(p->x)){
+		if( f->getPenetrationDepth2(e) > 0.01 ){
+			
+			valid = false;
+			break;
+		}
+	}
+
+	for( CollisionInformation ci : collisionsB ){
+		Point *p = ci.point;
+		Face *f = ci.face;
+		Edge e( p->pre, p );
+
+		if( f->getPenetrationDepth2(e) > 0.01 ){
+			
+			valid = false;
+			break;
+		}
+	}
+
+	return valid;
+}
+
+void DeformableContact::solveContactRegion(){
+	Debug::log(string("Solving deformable contact"));
+	
+	cout << "Solving contact region" << endl;
+
+	while( !isContactRegionValid() ){
+		// doprojections
+		for( CollisionInformation ci : collisionsA ){
+			Point *p = ci.point;
+			Face *f = ci.face;
+			Edge e( p->pre, p );
+
+			p->move = false;
+			p->x = f->getFaceProjection2(e);
+		}
+
+		
+		for( CollisionInformation ci : collisionsB ){
+			Point *p = ci.point;
+			Face *f = ci.face;
+			Edge e( p->pre, p );
+
+			p->move = false;
+			p->x = f->getFaceProjection2(e);
+		}		
+
+	}
 }
 
 void DeformableContact::computeSeparatingPlane(){
@@ -228,151 +298,156 @@ void DeformableContact::computeSeparatingPlane(){
 		sepPlane->normal = -sepPlane->normal;
 
 }
-
-bool DeformableContact::isContactRegionValid(){
-	bool valid = true;
-	
-	for( CollisionInformation ci : collisionsA ){
-		Point *p = ci.point;
-		Face *f = ci.face;
-		Edge e( p->pre, p );
-
-		// if( !f->isInside(p->x)){
-		if( f->getPenetrationDepth2(e) > 0.01 ){
-			
-			valid = false;
-			break;
-		}
-	}
-
-	for( CollisionInformation ci : collisionsB ){
-		Point *p = ci.point;
-		Face *f = ci.face;
-		Edge e( p->pre, p );
-
-		if( f->getPenetrationDepth2(e) > 0.01 ){
-			
-			valid = false;
-			break;
-		}
-	}
-
-	return valid;
-}
-
-void DeformableContact::solveContactRegion(){
-	Debug::log(string("Solving deformable contact"));
-	// create hyperplane
-	//this->computeSeparatingPlane();
-	cout << "Solving contact region" << endl;
-	while( !isContactRegionValid() ){
-		
-		for( CollisionInformation ci : collisionsA ){
-			Point *p = ci.point;
-			Face *f = ci.face;
-			Edge e( p->pre, p );
-
-			p->move = false;
-			p->x = f->getFaceProjection2(e);
-		}
-
-		
-		for( CollisionInformation ci : collisionsB ){
-			Point *p = ci.point;
-			Face *f = ci.face;
-			Edge e( p->pre, p );
-
-			p->move = false;
-			p->x = f->getFaceProjection2(e);
-		}		
-	}
-
-
-
-	cout << "Solved!" << endl;
-	 // cin.get();
-}
 	
 
 void DeformableContact::resolve(){
+// Computing the response force for each coll
+		double Cr =  0.5;
+		double m1 = 0;
+		double m2 = 0;
+		double j;
+		vec v2 = zeros<vec>(3);
+		vec v1 = zeros<vec>(3);
+		vec n;
+
+	for( CollisionInformation ci : collisionsA ){
+		Face *f = ci.face;
+		Point *p = ci.point;
+		m1 = p->m;
+		m2 = f->points[0]->m;
+		v2 = (f->points[0]->v + f->points[1]->v + f->points[2]->v)/3;
+		v1 = p->v;
+		n = f->normal;
+
+		j = (1.0 + Cr)*dot(v1 - v2, n)/(1/m1 + 1/m2);
+		p->pre->v = zeros<vec>(3);
+		p->v = j*n/m1;
+	}
+
+	for( CollisionInformation ci : collisionsB ){
+		Face *f = ci.face;
+		Point *p = ci.point;
+		m1 = p->m;
+		m2 = f->points[0]->m;
+		v2 = (f->points[0]->v + f->points[1]->v + f->points[2]->v)/3;
+		v1 = p->v;
+		n = f->normal;
+
+		j = (1.0 + Cr)*dot(v1 - v2, n)/(1/m1 + 1/m2);
+
+		p->pre->v = zeros<vec>(3);
+		p->v = j*n/m1;
+	}
+
+	if( !react )
+		return;
+
+	if( collisionsA.size() == 0 || collisionsB.size() == 0 )
+		return;
+
+	
+	m1 = 0;
+	m2 = 0;
+	v2 = zeros<vec>(3);
+	v1 = zeros<vec>(3);
+	computeSeparatingPlane();
+
+	n = sepPlane->normal/norm(sepPlane->normal);
+	
+	for( Point *p : A->getPoints() ){
+		v1 += p->v/A->getPoints().size();
+		m1 += p->m;
+	}
+
+	for( Point *p : B->getPoints() ){
+		v2 += p->v/B->getPoints().size();
+		m2 += p->m;
+	}
+
+	j = -(1.0 + Cr)*dot(v1 - v2, n);
+	cout << "Applying impulse: " << j << endl;
+
+	for( Point *p : A->getPoints() ){
+	// for(CollisionInformation ci : collisionsA){
+	// 	Point *p = ci.point;
+		p->pre->v = zeros<vec>(3);
+		p->v = j*n;
+	}
+
+	for( Point *p : B->getPoints() ){
+	// for(CollisionInformation ci : collisionsB){
+	// 	Point *p = ci.point;
+		p->pre->v = zeros<vec>(3);	
+		p->v = -j*n;
+	}
+
+	
+
+	
 
 }
 
-void DeformableContact::prunePoints(){
-	Debug::log(string("Prunning deformable contact"), LOOP);
+void DeformableContact::pruneCollisionList( vector<CollisionInformation>& collisions, GeometricObject *go ){
 	vector<vector<CollisionInformation>::iterator> toDel;
+	double vel;
+	double acc;
 
-	// Detach elements with no pressure 
-
-	// Detach elements not in the face anymore
-
-	// Preserve tangential components of the velocity
-
-	for( vector<CollisionInformation>::iterator it = collisionsA.begin(); 
-		it != collisionsA.end(); ++it ){
+	for( vector<CollisionInformation>::iterator it = collisions.begin(); 
+		it != collisions.end(); ++it ){
 		
 		Point *p = (*it).point;
 		Face *f = (*it).face;
 		// Normal pressure
 		f->computeNormal();
-		vec cmA = computeCenterOfMass( A->getPoints() );
+		vec cmA = computeCenterOfMass( go->getPoints() );
 		vec d = cmA - f->getCentroid();
 
 		if( dot( f->normal, d ) < 0 )
 			f->normal = -f->normal;
+
+		Edge e( p->pre, p );
 		
 		// if( dot(p->x - p->pre->x, f->normal) > 0 )
 		// 	f->normal = -f->normal;
 
-		double acc = dot(p->v - p->pre->v, f->normal);
+		vel = dot(p->v, f->normal);
+		acc = dot(p->v - p->pre->v, f->normal);
 	
+		if( abs(vel) > 0.2 )
+			this->react = false;
+		
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  (acc  >= 0 ) && norm(p->v) > 0.01){
+		if( f->getPenetrationDepth2(e) > 0.01 || ( acc >= 0.01) ){
 			Debug::log(string("Prunning condition satisfied"), LOOP);
-			cout << "Prunning A: " << acc << endl;
+			cout << "Prunning: " << acc << endl;
 			 //cin.get();
 			p->move = true;
 			Debug::log(string("Erasing contact"), LOOP);
 			toDel.push_back(it);
 			Debug::log(string("Done"), LOOP);
 		}
+		else{
+			vec u = f->normal/norm(f->normal);
+			mat Pr = eye(3,3) - u*u.t();
+			p->pre->v = Pr*p->pre->v;
+			p->v = 0.1*Pr*p->v;
+		}
 	}
 
 	for( vector<CollisionInformation>::iterator it: toDel )
-		collisionsA.erase(it);
+		collisions.erase(it);
 
 	toDel.clear();
+}
 
-	for( vector<CollisionInformation>::iterator it = collisionsB.begin(); 
-		it != collisionsB.end(); ++it ){
+void DeformableContact::prunePoints(){
+	Debug::log(string("Prunning deformable contact"), LOOP);
 
-		Point *p = (*it).point;
-		Face *f = (*it).face;
-		// Normal pressure
-		f->computeNormal();
-		vec cmB = computeCenterOfMass( B->getPoints() );
-		vec d = cmB - f->getCentroid();
+	if( collisionsA.size() > 3 || collisionsB.size() > 3 )
+	this->react = true;
+	pruneCollisionList( collisionsA, A );
+	pruneCollisionList( collisionsB, B );	
 
-		if( dot( f->normal, d ) < 0 )
-			f->normal = -f->normal;
-		// if( dot(p->x - p->pre->x, f->normal) > 0 )
-		// 	f->normal = -f->normal;
-		double acc = dot(p->v - p->pre->v, f->normal);
-		
-		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  (acc  >= 0 ) && norm(p->v) > 0.01 ){
-			Debug::log(string("Prunning condition satisfied"), LOOP);
-			cout << "Prunning B: " << acc << endl;
-			 //cin.get();
-			p->move = true;
-			Debug::log(string("Erasing contact"), LOOP);
-			toDel.push_back(it);
-			Debug::log(string("Done"), LOOP);
-		}
-	}
-	//cout << "Contacts to erase: " << toDel.size() << " of " << collisionsB.size() << endl;
-	for( vector<CollisionInformation>::iterator it: toDel )
-		collisionsB.erase(it);
 }
 
 // Rigid contact

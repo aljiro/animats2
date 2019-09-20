@@ -232,10 +232,12 @@ vec Face::getFaceProjection( Edge& e ){
 }
 
 vec Face::getFaceProjection2( Edge& e ){
+	if( this->recompute ){
+		this->computeNormal();
+	}
 	
 	vec u = this->normal/norm(this->normal);
 	mat P = eye(3,3) - u*u.t();
-
 
 	//if( dot( u0, this->normal ) < 0 )
 		return  P*( e.v1->x - this->getCentroid()) + this->getCentroid();
@@ -247,9 +249,12 @@ vec Face::getFaceProjection2( Edge& e ){
  // Old penetration depth
 double Face::getPenetrationDepth2( Edge& e ){
 
+	if( this->recompute ){
+		this->computeNormal();
+	}
+
 	vec u = this->normal/norm(this->normal);
 	mat P = u*u.t();
-
 
 	//if( dot( u0, this->normal ) < 0 )
 	vec px = P*( e.v1->x - this->getCentroid() );

@@ -3,6 +3,7 @@
 
 #include "simulation.h"
 #include "util.h"
+#include "simview.h"
 
 #include <vector>
 #include <iostream>
@@ -39,6 +40,8 @@ class XMLLoader : public Loader{
 private:
 	void addPlane( Simulation *s, XMLNode * );
 	void addAnimat( Simulation *s, XMLNode * );
+	void addView( Simulation *s, XMLNode * );
+
 public:
 	void load( Simulation *s, char *name );
 };

@@ -9,7 +9,7 @@ Solver::Solver( double h ):h(h), t(0.0){
 void Solver::step( Simulation& s ){
 	vector<Point *> points;
 	vector<vec> goals;
-	double c = 2.5;
+	double c = 0.5;
 
 	Debug::log(string("Computing external forces"), LOOP );
 	s.computeExternalForces();
@@ -33,13 +33,13 @@ void Solver::step( Simulation& s ){
 
 			if( points[i]->move )
 				points[i]->pre = new Point(*(points[i]));
-			else{
-				points[i]->pre->v =  zeros<vec>(3);
-				points[i]->v = zeros<vec>(3) ;
-			}			
+			// else{				
+			// 	points[i]->pre->v =  zeros<vec>(3);
+			// 	points[i]->v = zeros<vec>(3) ;
+			// }			
 
 			// Modified Euler
-			// points[i]->vi = 
+			// points[i]->vi = alpha*( x - g )/h;
 			points[i]->v += -alpha*( x - g )/h - h*c*points[i]->v/m + 
 							h*f/m;
 			
@@ -60,9 +60,9 @@ void Solver::step( Simulation& s ){
 
 		for( int i = 0; i < points.size(); i++ ){			
 
-			if( !points[i]->move ){
-				continue;
-			}
+			// if( !points[i]->move ){
+			// 	continue;
+			// }
 			
 			points[i]->x += h*points[i]->v;	
 

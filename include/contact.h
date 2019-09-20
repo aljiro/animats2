@@ -64,14 +64,16 @@ class DeformableContact: public Contact{
 	vector<double> u_B;
 	double delta;
 	Face *sepPlane;
+	bool react;
 public:
 	DeformableContact( SoftBody *A, SoftBody *B);
 	// void updateDisplacements();
 	// bool evaluateRegion();
 	void addCollision( CollisionInformation ci );
 	void prunePoints();
-	bool isContactRegionValid();
 	void computeSeparatingPlane();
+	void pruneCollisionList( vector<CollisionInformation>& collisions, GeometricObject *go );
+	bool isContactRegionValid();
 	void solveContactRegion();
 	void resolve();
 };

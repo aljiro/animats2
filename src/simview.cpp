@@ -3,22 +3,32 @@
 using namespace morph::animats;
 
 SimView::SimView( Simulation& s ):shaderId(-1), colorId(-1){
-	if( this->init() != 0 ){
-		cout << "Error initializing the view!" << endl;
-		return;
-	}
-	Debug::log(string("Setting up the SimView"));	
-	this->setup( s );
-}
-
-int SimView::init(){
-	Debug::log(string("Initializing SimView"));
 	this->width = 1024;
 	this->height = 768;
 	this->lightColor = new GLfloat[3]{1,1,1};
 	// this->lightPower = 0.5;
 	this->lightPosition = new GLfloat[3]{3,3,3};
-		// Initialise GLFW
+
+	cParams.position =  glm::vec3( 1, 1, 3 );
+	cParams.hAngle =  3.14f;
+	cParams.vAngle = 0.0f;
+	cParams.fov = 45.0f;
+	cParams.speed = 3.0f;
+	cParams.direction = -cParams.position;
+	cParams.up = glm::vec3( 0, 1, 0 );
+	cParams.mouseSpeed = 0.001f;
+	cParams.lastTime = glfwGetTime();
+
+	if( this->init() != 0 ){
+		cout << "Error initializing the view!" << endl;
+		return;
+	}
+}
+
+int SimView::init(){
+	Debug::log(string("Initializing SimView"));
+	
+	// Initialise GLFW
     if( !glfwInit() )
     {
         fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -62,6 +72,13 @@ int SimView::init(){
 
 }
 
+void SimView::setViewPort( vec p ){
+	Debug::log(string("Setting up viewport") + printvec(p));
+	cParams.position = glm::vec3(p(0), p(1), p(2));
+	cParams.direction = -cParams.position;
+	transformations();
+}
+
 void SimView::createBuffer( GeometricObject *go ){
 
 	vector<Face*> faces = go->getFaces();	
@@ -83,10 +100,7 @@ void SimView::createBuffer( GeometricObject *go ){
 						   GL_FLOAT, 
 						   GL_FALSE, 
 						   0, // stride 
-						   (void*)0 );
-	
-
-	
+						   (void*)0 );	
 	glGenBuffers(1, &(go->normalBuffer));
 	glBindBuffer(GL_ARRAY_BUFFER, go->normalBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
@@ -106,11 +120,64 @@ void SimView::createBuffer( GeometricObject *go ){
     glDepthFunc( GL_LESS );
 }
 
-void SimView::transformations( GLuint programId ){
-    glm::mat4 P = glm::perspective( glm::radians(45.0f), (float)width/(float)height, 0.1f, 100.0f );
-    this->V = glm::lookAt( glm::vec3(1, 0.5, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0) );
-    this->M = glm::mat4(0.1f);
-    this->MVP = P*this->V*this->M;
+void SimView::transformations( ){
+	Debug::log(string("Configuring transformation matrices"), LOOP);
+    this->P = glm::perspective( glm::radians(cParams.fov), (float)width/(float)height, 0.1f, 100.0f );
+	// Camera matrix
+	this->V = glm::lookAt(
+	    cParams.position,           // Camera is here
+	    cParams.position+cParams.direction, // and looks here : at the same position, plus "direction"
+	    cParams.up                  // Head is up (set to 0,-1,0 to look upside-down)
+	);
+	this->M = glm::mat4(0.1f);
+    this->MVP = this->P*this->V*this->M;
+    Debug::log(string("Matrices configured!"), LOOP);
+}
+
+void SimView::computeTransformationsFromInput(){
+
+	double currentTime = glfwGetTime();
+	float deltaTime = float(currentTime - cParams.lastTime);
+
+	// If control is pressed, change view angle
+	if( glfwGetKey( this->window, GLFW_KEY_LEFT_CONTROL ) == GLFW_PRESS ){
+		double xpos, ypos;
+		glfwGetCursorPos(this->window, &xpos, &ypos);
+
+		cParams.hAngle += cParams.mouseSpeed * deltaTime * float( width/2 - xpos );
+		cParams.vAngle += cParams.mouseSpeed * deltaTime * float( height/2 - ypos );
+	}
+
+	cParams.direction = glm::vec3(
+					    cos(cParams.vAngle) * sin(cParams.hAngle),
+					    sin(cParams.vAngle),
+					    cos(cParams.vAngle) * cos(cParams.hAngle));
+	glm::vec3 right = glm::vec3(
+					    sin(cParams.hAngle - 3.14f/2.0f),
+					    0,
+					    cos(cParams.hAngle - 3.14f/2.0f));
+
+	cParams.up = glm::cross( right, cParams.direction );
+
+	// Move forward
+	if (glfwGetKey( this->window, GLFW_KEY_UP ) == GLFW_PRESS){
+	    cParams.position += cParams.direction * deltaTime * cParams.speed;
+	}
+	// Move backward
+	if (glfwGetKey( this->window, GLFW_KEY_DOWN ) == GLFW_PRESS){
+	    cParams.position -= cParams.direction * deltaTime * cParams.speed;
+	}
+	// Strafe right
+	if (glfwGetKey( this->window, GLFW_KEY_RIGHT ) == GLFW_PRESS){
+	    cParams.position += right * deltaTime * cParams.speed;
+	}
+	// Strafe left
+	if (glfwGetKey( this->window, GLFW_KEY_LEFT ) == GLFW_PRESS){
+	    cParams.position -= right * deltaTime * cParams.speed;
+	}
+
+	cParams.lastTime = currentTime;
+
 }
 
 // Drawing routines
@@ -133,7 +200,7 @@ void SimView::setup( Simulation &s ){
 	this->shaderId = LoadShaders( "shaders/AnimatVertexShader.vsh", 
 							 	  "shaders/AnimatFragmentShader.fsh" );
 	glUseProgram( this->shaderId );
-	transformations( this->shaderId );
+	transformations();
 
 	this->colorId = glGetUniformLocation( this->shaderId, "color" );
 	this->matrixId = glGetUniformLocation( this->shaderId, "MVP" );
@@ -168,6 +235,10 @@ void SimView::collectObjectShape( GeometricObject *go, GLfloat *shape, GLfloat *
 
 
 void SimView::drawObject( GeometricObject *go , int colorId){
+	
+	if( !go->isVisible() )
+		return;
+
 	Debug::log(string("Collecting object shape"), LOOP);
 
 	// Sending vertices to opengl
@@ -268,8 +339,13 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 
 void SimView::notify( Simulation& s, std::string message ){
 	Debug::log(string("SimView Noti/fied."), LOOP);
+	computeTransformationsFromInput();
+	transformations();
 	this->draw( s );
 	glfwSetWindowTitle(this->window, message.c_str() );
+
+	if( glfwWindowShouldClose(window) != 0 )
+		s.close();
 }
 
 void SimView::draw( Simulation& s ){
@@ -296,7 +372,6 @@ void SimView::draw( Simulation& s ){
 	Debug::log(string("Drawing objects: Swap and Poll"), LOOP);
 	glfwSwapBuffers(this->window);
     glfwPollEvents();
-    	
 }
 
 char* SimView::checkErrors(){

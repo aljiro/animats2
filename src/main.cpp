@@ -20,10 +20,8 @@ int main( int argc, char** args ){
     }
 
 	Simulation *s = Simulation::load( args[1] );
-	SimView *sview = new SimView( *s );
 	GravityForce *gf = new GravityForce(NULL);
 	s->addForce( gf );
-	s->addView( sview );
 	s->reset();
-	s->run( 1000 );
+	s->run( -1 );
 }

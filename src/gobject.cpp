@@ -5,6 +5,8 @@ using namespace morph::animats;
 // Geometric Object
 // Constructors and operators
 GeometricObject::GeometricObject( MeshProvider *mp ){
+	this->id = rand();
+	this->visible = true;
 	mp->populate(this);
 }
 
@@ -14,6 +16,24 @@ GeometricObject::GeometricObject( const GeometricObject& go ){
 }
 
 GeometricObject& GeometricObject::operator=( const GeometricObject& go ){
+
+}
+
+void GeometricObject::setId( int id ){
+    this->id = id;
+}
+
+int GeometricObject::getId( ){
+	return this->id;
+}
+
+void GeometricObject::setVisible( bool v ){
+	this->visible = v;
+}
+    
+
+bool GeometricObject::isVisible(){
+	return this->visible;
 
 }
 
@@ -85,7 +105,6 @@ vector<Face *>& GeometricObject::getFaces(){
 vector<Edge>& GeometricObject::getEdges(){
 	return this->edges;
 }
-
 
 // SoftBody
 SoftBody::SoftBody( MeshProvider* mp, double mass, double alpha ): GeometricObject(mp), alpha(alpha){

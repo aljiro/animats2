@@ -16,6 +16,18 @@ using namespace std;
 
 namespace morph{ namespace animats{
 
+typedef struct{
+	glm::vec3 position;
+	float hAngle;
+	float vAngle;
+	float fov;
+	float speed;
+	float mouseSpeed;
+	float lastTime;
+	glm::vec3 direction;
+	glm::vec3 up;
+} CameraParams; 
+
 class SimView : public View{
 private:
 	GLFWwindow* window;
@@ -32,10 +44,13 @@ private:
 	glm::mat4 MVP;
 	glm::mat4 M;
 	glm::mat4 V;
+	glm::mat4 P;
 	int width, height;
 	float lightPower;
 	GLfloat *lightColor;
 	GLfloat *lightPosition;
+	// PArameters for user control
+	CameraParams cParams;
 
 public:
 	SimView( Simulation& s );
@@ -47,7 +62,9 @@ public:
 	void collectObjectShape( GeometricObject *go,  GLfloat *shape, GLfloat *normals );
 	void notify( Simulation& s, std::string message );
 	char* checkErrors();
-	void transformations( GLuint programId );
+	void transformations();
+	void computeTransformationsFromInput();
+	void setViewPort( vec p );
 
 	// Destructor
 	~SimView();
