@@ -74,11 +74,33 @@ Contact::~Contact(){
 // ----------------------------------------------------------------
 
 SignoriniContact::SignoriniContact( SoftBody *sb, RigidBody *rb ):Contact( sb, rb ){
+
 }
 
+bool SignoriniContact::isResting(){
+	bool resting = true;
+
+	if( collisions.size() == 0 )
+		resting = false;
+
+	for( vector<CollisionInformation>::iterator it = collisions.begin(); 
+			it != collisions.end(); ++it ){
+		Point *p = (*it).point;
+		Face *f = (*it).face;
+
+		if( norm(p->v) > 0.5 ){
+			cout << "Because: " << norm(p->v) << endl;
+			resting = false;
+		}
+	}
+
+	cout << "RESTING? "<< resting << endl;
+
+	return resting;
+}
 
 void SignoriniContact::addCollision( CollisionInformation ci ){
-	// TO-DO: check if already exists?
+	
 	bool found = false;
 
 	for ( CollisionInformation stored : collisions )
@@ -108,16 +130,19 @@ void SignoriniContact::solveContactRegion(){
 void SignoriniContact::resolve(){
 	Debug::log(string("Resolving collision"), LOOP);
 
-	// for( vector<CollisionInformation>::iterator it = collisions.begin(); 
-	// 	it != collisions.end(); ++it ){
-	// 	Point *p = (*it).point;
-	// 	Face *f = (*it).face;
-	// 	p->v = -0.8*dot(p->v, f->normal)*f->normal;
-	// }
-
-	// for( Point *p : A->getPoints() ){
-	// 	p->v = -0.2*p->v;
-	// }
+	if( !this->isResting() ){
+		for( vector<CollisionInformation>::iterator it = collisions.begin(); 
+			it != collisions.end(); ++it ){
+			Point *p = (*it).point;
+			Face *f = (*it).face;
+			vec u = f->normal/norm(f->normal);
+			mat Pr = eye(3,3) - u*u.t();
+			p->pre->vi = zeros<vec>(3);//Pr*p->pre->vi;
+			p->vi = 0.1*Pr*p->vi;
+			p->pre->ve = zeros<vec>(3);//Pr*p->pre->ve;
+			p->ve = 0.1*Pr*p->ve;
+		}
+	}
 }
 
 void SignoriniContact::prunePoints(){
@@ -134,19 +159,13 @@ void SignoriniContact::prunePoints(){
 		double acc = dot(p->v - p->pre->v, f->normal);
 		
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  (acc  > -0.07 || vel > 0) && norm(p->v) > 0.05 ){
+		if(  (acc  > -0.07 || vel > 0) && norm(p->v) > 0.0 ){
 
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
 			Debug::log(string("Erasing contact"), LOOP);
 			toDel.push_back(it);
 			Debug::log(string("Done"), LOOP);
-		}else{
-			vec u = f->normal/norm(f->normal);
-			mat Pr = eye(3,3) - u*u.t();
-			p->pre->v = Pr*p->pre->v;
-			p->v = 0.1*Pr*p->v;
-
 		}
 	}
 
@@ -167,6 +186,10 @@ void SignoriniContact::prunePoints(){
 DeformableContact::DeformableContact( 
 				   SoftBody *A, SoftBody *B):Contact( A, B ){
 	sepPlane = NULL;
+}
+
+bool DeformableContact::isResting(){
+	return false;
 }
 
 void DeformableContact::addCollision( CollisionInformation ci ){
@@ -465,6 +488,10 @@ void RigidContact::solveContactRegion(){
 
 void RigidContact::resolve(){
 
+}
+
+bool RigidContact::isResting(){
+	return false;
 }
 
 void RigidContact::prunePoints(){

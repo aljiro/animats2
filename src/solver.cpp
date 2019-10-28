@@ -1,3 +1,4 @@
+
 #include "../include/solver.h"
 
 using namespace morph::animats;
@@ -39,11 +40,10 @@ void Solver::step( Simulation& s ){
 			// }			
 
 			// Modified Euler
-			// points[i]->vi = alpha*( x - g )/h;
-			points[i]->v += -alpha*( x - g )/h - h*c*points[i]->v/m + 
-							h*f/m;
+			points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->pre->vi/m;
+			points[i]->ve += h*f/m;
+			points[i]->v = points[i]->vi + points[i]->ve;
 			
-			// Call prune constants here;
 			this->t += h;
 			
 		}
@@ -54,15 +54,15 @@ void Solver::step( Simulation& s ){
 
 	Debug::log(string("Moving points"), LOOP );
 
-		// Move soft bodies
+	// Move soft bodies
 	for( SoftBody *go : s.getSoftBodies() ){
 		points = go->getPoints();
 
 		for( int i = 0; i < points.size(); i++ ){			
 
-			// if( !points[i]->move ){
-			// 	continue;
-			// }
+			if( !points[i]->move ){
+				continue;
+			}
 			
 			points[i]->x += h*points[i]->v;	
 

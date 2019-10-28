@@ -35,7 +35,7 @@ public:
 	virtual void prunePoints() = 0;
 	virtual void solveContactRegion() = 0;
 	virtual void resolve() = 0;
-	bool isResting();
+	virtual bool isResting() = 0;
 	~Contact();
 
 	friend ContactList;
@@ -54,6 +54,7 @@ public:
 	void prunePoints();
 	void solveContactRegion();
 	void resolve();
+	bool isResting();
 };
 
 class DeformableContact: public Contact{
@@ -76,6 +77,7 @@ public:
 	bool isContactRegionValid();
 	void solveContactRegion();
 	void resolve();
+	bool isResting();
 };
 
 class RigidContact: public Contact{
@@ -85,6 +87,7 @@ public:
 	void prunePoints();
 	void solveContactRegion();
 	void resolve();
+	bool isResting();
 
 };
 

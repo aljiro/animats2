@@ -12,4 +12,10 @@
 		<rotate>(0.0,0.0,90.0)</rotate>
 		<softness>0.2</softness>
 	</animat>
+
+	<animat id="2" visible="true">
+		<scale>(0.3,0.3,0.3)</scale>
+		<position>(0.0,0.3,0.1)</position>
+		<softness>0.5</softness>
+	</animat>
 </experiment>

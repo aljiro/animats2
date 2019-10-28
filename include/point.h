@@ -14,6 +14,7 @@ public:
 	vec x;
 	vec v;
 	vec vi;
+	vec ve;
 	float m;
 	vec f;
 

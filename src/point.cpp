@@ -5,7 +5,8 @@ using namespace arma;
 
 Point::Point( vec x, float m, vec color ):x(x), 
 								     v(zeros<vec>(3)),
-								     vi(zeros<vec>(3)), 
+								     vi(zeros<vec>(3)),
+								     ve(zeros<vec>(3)),
 								     m(m), 
 								     f(zeros<vec>(3)),
 								     color(color),
@@ -19,6 +20,7 @@ Point::Point( const Point& p ){
 	this->x = vec(p.x);
 	this->v = vec(p.v);
 	this->vi = vec(p.vi);
+	this->ve = vec(p.ve);
 	this->m = p.m;
 }
 
