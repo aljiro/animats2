@@ -1,4 +1,6 @@
-#include "video.h"
+#include "../include/video.h"
+
+using namespace morph::animats;
 
 VideoRecorder::VideoRecorder(){
 	

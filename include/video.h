@@ -1,6 +1,8 @@
-#ifndef SIMVIEW_H
-#define SIMVIEW_H
+#ifndef VIDEO_H
+#define VIDEO_H
 
+#include <iostream>
+#include "simulation.h"
 #include "view.h"
 
 namespace morph{ namespace animats{
@@ -12,6 +14,7 @@ public:
 	void notify( Simulation& s, std::string message );
 
 };
-}
+
+}}
 
 #endif
