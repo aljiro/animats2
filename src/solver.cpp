@@ -34,13 +34,14 @@ void Solver::step( Simulation& s ){
 
 			if( points[i]->move )
 				points[i]->pre = new Point(*(points[i]));
+			
 			// else{				
 			// 	points[i]->pre->v =  zeros<vec>(3);
 			// 	points[i]->v = zeros<vec>(3) ;
 			// }			
 
 			// Modified Euler
-			points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->pre->vi/m;
+			points[i]->vi += -alpha*( x - g )/h; //- h*c*points[i]->vi/m;
 			points[i]->ve += h*f/m;
 			points[i]->v = points[i]->vi + points[i]->ve;
 			

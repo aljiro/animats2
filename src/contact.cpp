@@ -123,26 +123,24 @@ void SignoriniContact::solveContactRegion(){
 
 		p->move = false; // This point won't move anymore until free
 		Edge e( p->pre, p );
-		p->x = f->getFaceProjection( e );		
+		p->x = f->getFaceProjection( e );
 	}
 }
 
 void SignoriniContact::resolve(){
 	Debug::log(string("Resolving collision"), LOOP);
-
-	if( !this->isResting() ){
+	cout << collisions.size() << " collisions so far " << endl;
+	// if( !this->isResting() ){
 		for( vector<CollisionInformation>::iterator it = collisions.begin(); 
 			it != collisions.end(); ++it ){
-			Point *p = (*it).point;
+			Point *p = (*it).point; // Point at which the collition is hapenning
 			Face *f = (*it).face;
-			vec u = f->normal/norm(f->normal);
-			mat Pr = eye(3,3) - u*u.t();
-			p->pre->vi = zeros<vec>(3);//Pr*p->pre->vi;
-			p->vi = 0.1*Pr*p->vi;
-			p->pre->ve = zeros<vec>(3);//Pr*p->pre->ve;
-			p->ve = 0.1*Pr*p->ve;
+			cout << "Point:" << endl;
+			cout << "Internal: " << printvec(p->vi) << ",\nExternal: " << printvec(p->ve) << endl;
+			cout << "position (x): " << printvec(p->x) << endl;
 		}
-	}
+	// }
+	cin.get();
 }
 
 void SignoriniContact::prunePoints(){
