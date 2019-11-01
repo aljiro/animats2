@@ -123,7 +123,7 @@ void SignoriniContact::solveContactRegion(){
 
 		p->move = false; // This point won't move anymore until free
 		Edge e( p->pre, p );
-		p->x = f->getFaceProjection( e );
+		p->x = f->getFaceProjection2( e );
 	}
 }
 
@@ -138,9 +138,19 @@ void SignoriniContact::resolve(){
 			cout << "Point:" << endl;
 			cout << "Internal: " << printvec(p->vi) << ",\nExternal: " << printvec(p->ve) << endl;
 			cout << "position (x): " << printvec(p->x) << endl;
+			// Adding colliding force
+			vec n = f->normal;
+			double vrel = dot(n.t(), p->v);
+			cout << "Relative velocity: " << vrel << endl;
+			if( vrel < 0 )
+				p->vc = -vrel*f->normal;
+			else
+				p->vc = zeros<vec>(3);
+			p->vi = zeros<vec>(3);
+
 		}
 	// }
-	cin.get();
+	// cin.get();
 }
 
 void SignoriniContact::prunePoints(){
@@ -161,6 +171,7 @@ void SignoriniContact::prunePoints(){
 
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
+			p->vc = zeros<vec>(3);
 			Debug::log(string("Erasing contact"), LOOP);
 			toDel.push_back(it);
 			Debug::log(string("Done"), LOOP);

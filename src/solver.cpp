@@ -10,7 +10,7 @@ Solver::Solver( double h ):h(h), t(0.0){
 void Solver::step( Simulation& s ){
 	vector<Point *> points;
 	vector<vec> goals;
-	double c = 0.5;
+	double c = 0.9;
 
 	Debug::log(string("Computing external forces"), LOOP );
 	s.computeExternalForces();
@@ -34,6 +34,11 @@ void Solver::step( Simulation& s ){
 
 			if( points[i]->move )
 				points[i]->pre = new Point(*(points[i]));
+			else{
+				points[i]->pre = new Point(*(points[i]));
+				// cout << "Goal fixed point: " << printvec(g) 
+				// 	 << ", actual position: " << printvec(x) << endl;
+			}
 			
 			// else{				
 			// 	points[i]->pre->v =  zeros<vec>(3);
@@ -41,9 +46,12 @@ void Solver::step( Simulation& s ){
 			// }			
 
 			// Modified Euler
-			points[i]->vi += -alpha*( x - g )/h; //- h*c*points[i]->vi/m;
+			if( points[i]->move )
+				points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->vi/m;
+			
 			points[i]->ve += h*f/m;
-			points[i]->v = points[i]->vi + points[i]->ve;
+			points[i]->v = points[i]->vi + points[i]->ve + points[i]->vc;
+			//points[i]->vc = zeros<vec>(3);
 			
 			this->t += h;
 			
@@ -61,9 +69,9 @@ void Solver::step( Simulation& s ){
 
 		for( int i = 0; i < points.size(); i++ ){			
 
-			if( !points[i]->move ){
-				continue;
-			}
+			// if( !points[i]->move ){
+			// 	continue;
+			// }
 			
 			points[i]->x += h*points[i]->v;	
 

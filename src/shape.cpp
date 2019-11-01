@@ -139,7 +139,7 @@ template<class T>
 void DeformableShape<T>::init( std::vector<Point *>& points ){
 // Set the basic precomputations and asign the orignal shape
     Debug::log(string("Initializing deformable shape"));
-    double beta = 0.1; 
+    double beta = 0.0; 
     this->transform = new T( points, beta );
 	this->originalShape.clear();
 
@@ -158,7 +158,7 @@ vector<vec> DeformableShape<T>::getGoals( std::vector<Point *>& points ){
 
 	for( i = 0; i < points.size(); i++ ){
 		vec x0 = this->originalShape[i]->x;
-		mat Tx = transform->getTransform( originalShape, points );
+		mat Tx = eye(3,3);//transform->getTransform( originalShape, points );
 		vec g = Tx*(x0 - cm0) + cm;
 		goals.push_back( g );
 	}
