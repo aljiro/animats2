@@ -142,11 +142,12 @@ void SignoriniContact::resolve(){
 			vec n = f->normal;
 			double vrel = dot(n.t(), p->v);
 			cout << "Relative velocity: " << vrel << endl;
-			if( vrel < 0 )
-				p->vc = -vrel*f->normal;
-			else
-				p->vc = zeros<vec>(3);
+			// if( vrel < 0 )
+			// 	p->vc = -vrel*f->normal;
+			// else
+			// 	p->vc = zeros<vec>(3);
 			p->vi = zeros<vec>(3);
+			p->ve = zeros<vec>(3);
 
 		}
 	// }
