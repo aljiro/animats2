@@ -65,6 +65,7 @@ template<class T> class DeformableShape{
         void init( vector<Point *>& points );
 		explicit DeformableShape( double alpha, std::vector<Point *>& points );
 		vector<vec> getGoals( vector<Point*>& points );
+        void setGoals( vector<Point*>& points );
         void setAlpha( double alpha );
         double getAlpha();
 };

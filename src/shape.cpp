@@ -167,6 +167,22 @@ vector<vec> DeformableShape<T>::getGoals( std::vector<Point *>& points ){
 }
 
 template<class T>
+void DeformableShape<T>::setGoals( std::vector<Point *>& points ){
+    vector<vec> goals;
+    vec cm = computeCenterOfMass( points );
+    vec cm0 = computeCenterOfMass( originalShape );
+    int i;
+
+    for( i = 0; i < points.size(); i++ ){
+        vec x0 = this->originalShape[i]->x;
+        mat Tx = eye(3,3);//transform->getTransform( originalShape, points );
+        vec g = Tx*(x0 - cm0) + cm;
+        points[i]->g = g;
+    }
+
+}
+
+template<class T>
 void DeformableShape<T>::setAlpha( double alpha ){
 	this->alpha = alpha;
 }

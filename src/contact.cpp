@@ -135,9 +135,8 @@ void SignoriniContact::resolve(){
 			it != collisions.end(); ++it ){
 			Point *p = (*it).point; // Point at which the collition is hapenning
 			Face *f = (*it).face;
-			cout << "Point:" << endl;
-			cout << "Internal: " << printvec(p->vi) << ",\nExternal: " << printvec(p->ve) << endl;
-			cout << "position (x): " << printvec(p->x) << endl;
+			
+			vec dv = p->g - p->x;
 			// Adding colliding force
 			vec n = f->normal;
 			double vrel = dot(n.t(), p->v);
