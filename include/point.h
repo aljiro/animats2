@@ -13,9 +13,10 @@ private:
 public:
 	vec x;
 	vec v;
-	vec vi;
-	vec ve;
-	vec vc;
+	vec vi; // Internal forces
+	vec ve; // External forces
+	vec vc; // Reaction
+	vec g; // Goal point
 	float m;
 	vec f;
 

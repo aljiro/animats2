@@ -9,13 +9,12 @@ Solver::Solver( double h ):h(h), t(0.0){
 
 void Solver::step( Simulation& s ){
 	vector<Point *> points;
-	vector<vec> goals;
 	double c = 0.0;
 
 	// Computing the goal positions
 	for( SoftBody *go : s.getSoftBodies() ){
 		points = go->getPoints();
-		goals = go->getShape()->setGoals( points );		
+		go->getShape()->setGoals( points );		
 	}
 
 	// External forces and reactions based upon the goals
@@ -39,12 +38,15 @@ void Solver::step( Simulation& s ){
 			points[i]->pre = new Point(*(points[i]));
 			
 			// Modified Euler
-			points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->vi/m;			
-			points[i]->ve += h*f/m;
-			points[i]->v = points[i]->vi + points[i]->ve + points[i]->vc;
+			// points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->vi/m;			
+			// points[i]->ve += h*f/m + alpha*points[i]->vc/h;
+			// points[i]->v = points[i]->vi + points[i]->ve;
+			if( norm(points[i]->vc) > 0.0 )
+				cout << "Spring force: " << printvec(alpha*( x - g )/h) << ", Reaction: " << printvec(alpha*points[i]->vc/h) << endl;
+
+			points[i]->v += -alpha*( x - g )/h + h*f/m + alpha*points[i]->vc/h;
 			//points[i]->vc = zeros<vec>(3);			
-			this->t += h;
-			
+			this->t += h;			
 		}
 	}
 

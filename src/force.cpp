@@ -31,9 +31,9 @@ void GravityForce::apply( GeometricObject *go ){
 	vector<Point *>& points = go->getPoints();
 
 	for( Point *p : points ){
-		p->f[0] += 0.0;
-		p->f[1] += -10.0/1000.0;
-		p->f[2] += 0.0;
+		p->f[0] = 0.0;
+		p->f[1] = -10.0;
+		p->f[2] = 0.0;
 	}	
 }
 

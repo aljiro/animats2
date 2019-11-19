@@ -8,6 +8,7 @@ Point::Point( vec x, float m, vec color ):x(x),
 								     vi(zeros<vec>(3)),
 								     ve(zeros<vec>(3)),
 								     vc(zeros<vec>(3)),
+								     g(zeros<vec>(3)),
 								     m(m), 
 								     f(zeros<vec>(3)),
 								     color(color),
@@ -23,6 +24,7 @@ Point::Point( const Point& p ){
 	this->vi = vec(p.vi);
 	this->ve = vec(p.ve);
 	this->vc = vec(p.vc);
+	this->g = vec(p.g);
 	this->m = p.m;
 }
 
