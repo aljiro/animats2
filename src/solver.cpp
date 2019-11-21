@@ -42,10 +42,11 @@ void Solver::step( Simulation& s ){
 			// points[i]->ve += h*f/m + alpha*points[i]->vc/h;
 			// points[i]->v = points[i]->vi + points[i]->ve;
 			if( norm(points[i]->vc) > 0.0 )
-				cout << "Spring force: " << printvec(alpha*( x - g )/h) << ", Reaction: " << printvec(alpha*points[i]->vc/h) << endl;
+				cout << "Spring force: " << printvec(-alpha*( x - g )/h) << ", Reaction: " << printvec(alpha*points[i]->vc/h) << endl;
 
 			points[i]->v += -alpha*( x - g )/h + h*f/m + alpha*points[i]->vc/h;
-			//points[i]->vc = zeros<vec>(3);			
+
+			points[i]->vc = zeros<vec>(3);			
 			this->t += h;			
 		}
 	}

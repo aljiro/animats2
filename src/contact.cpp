@@ -139,18 +139,18 @@ void SignoriniContact::resolve(){
 			vec dv = p->g - p->x;
 			// Adding colliding force
 			vec n = f->normal;
-			double vrel = dot(n.t(), dv);
+			double vrel = dot(n, dv);
 			cout << "Relative velocity: " << vrel << endl;
 			cout << "Actual velocity: " << printvec(p->v) << endl;
 			
 			if( vrel < 0 )
-				p->vc = -2*vrel*f->normal;
+				p->vc = -dv;
 			else
 				p->vc = zeros<vec>(3);
 
 		}
 	// }
-	cin.get();
+	// cin.get();
 }
 
 void SignoriniContact::prunePoints(){
@@ -167,11 +167,11 @@ void SignoriniContact::prunePoints(){
 		double acc = dot(p->v - p->pre->v, f->normal);
 		
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  vel > 0.0 && norm(p->v) > 0.01 ){
+		if(  acc > 0.0 && norm(p->v) > 0.01 ){
 
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
-			p->vc = zeros<vec>(3);
+			//p->vc = zeros<vec>(3);
 			Debug::log(string("Erasing contact"), LOOP);
 			toDel.push_back(it);
 			Debug::log(string("Done"), LOOP);
