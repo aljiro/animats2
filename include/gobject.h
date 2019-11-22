@@ -36,6 +36,7 @@ protected:
 	vector<Point *> points;
 
 public:
+	vec dx;
 	BodyType type;
 	// Graphic objects
 	GLuint VBO;

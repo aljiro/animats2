@@ -11,7 +11,7 @@
 	<animat id="1" visible="true">
 		<scale>(0.3,0.3,0.3)</scale>
 		<position>(0.0,0.9,0.1)</position>
-		<softness>0.8</softness>
+		<softness>0.1</softness>
 	</animat>
 
 	

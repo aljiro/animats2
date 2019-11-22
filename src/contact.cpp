@@ -118,8 +118,8 @@ void SignoriniContact::solveContactRegion(){
 		Point *p = ci.point;
 		Face *f = ci.face;
 
-		// if( !p->move )
-		// 	continue;
+		if( !p->move )
+		 	continue;
 
 		p->move = false; // This point won't move anymore until free
 		Edge e( p->pre, p );
@@ -131,24 +131,30 @@ void SignoriniContact::resolve(){
 	Debug::log(string("Resolving collision"), LOOP);
 	cout << collisions.size() << " collisions so far " << endl;
 	// if( !this->isResting() ){
-		for( vector<CollisionInformation>::iterator it = collisions.begin(); 
-			it != collisions.end(); ++it ){
-			Point *p = (*it).point; // Point at which the collition is hapenning
-			Face *f = (*it).face;
-			
-			vec dv = p->g - p->x;
-			// Adding colliding force
-			vec n = f->normal;
-			double vrel = dot(n, dv);
-			cout << "Relative velocity: " << vrel << endl;
-			cout << "Actual velocity: " << printvec(p->v) << endl;
-			
-			if( vrel < 0 )
-				p->vc = -dv;
-			else
-				p->vc = zeros<vec>(3);
+	vec delta = zeros<vec>(3);
 
-		}
+	for( vector<CollisionInformation>::iterator it = collisions.begin(); 
+		it != collisions.end(); ++it ){
+		Point *p = (*it).point; // Point at which the collition is hapenning
+		Face *f = (*it).face;
+		GeometricObject *go = (*it).goPoint;
+		
+		vec dx = p->g - p->x;
+		// Adding colliding force
+		vec n = f->normal;
+		double vrel = dot(n, dx);
+		cout << "Relative velocity: " << vrel << endl;
+		
+		
+		if( vrel < 0 )
+			go->dx += -dx;
+			// go->dx +=-vrel*n;
+			// p->vc = -vrel*n;
+
+
+	}
+	cout << "Finish resolve"<<endl;
+
 	// }
 	// cin.get();
 }
@@ -157,18 +163,22 @@ void SignoriniContact::prunePoints(){
 	Debug::log(string("Prunning signirini contact"), LOOP);
 	vector<vector<CollisionInformation>::iterator> toDel;
 
+	cout << "Number of contact points: " << collisions.size()<<endl;
+
 	for( vector<CollisionInformation>::iterator it = collisions.begin(); 
 		it != collisions.end(); ++it ){
 		Point *p = (*it).point;
 		Face *f = (*it).face;
 
+		double gp = dot( p->g)
 		// Normal pressure
 		double vel = dot(p->v, f->normal);
 		double acc = dot(p->v - p->pre->v, f->normal);
-		
-		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  acc > 0.0 && norm(p->v) > 0.01 ){
 
+		cout << "Actual velocity: " << printvec(p->v) << endl;
+		// Debug::log(string("Checking prunning condition"), LOOP);
+		if(  vel >= 0.0 ){//} && norm(p->v) > 0.01 ){
+			cout << "Prunning point!" << endl;
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
 			//p->vc = zeros<vec>(3);
@@ -183,8 +193,9 @@ void SignoriniContact::prunePoints(){
 	for( vector<CollisionInformation>::iterator it: toDel )
 		collisions.erase(it);
 
+	cout << "Finish prunning" << endl;
 	//cout << "After erasing: " << collisions.size() << endl;
-	//cin.get();
+	// cin.get();
 	Debug::log(string("Contacts prunned"), LOOP);
 }
 

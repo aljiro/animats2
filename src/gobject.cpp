@@ -4,7 +4,7 @@ using namespace morph::animats;
 
 // Geometric Object
 // Constructors and operators
-GeometricObject::GeometricObject( MeshProvider *mp ){
+GeometricObject::GeometricObject( MeshProvider *mp ):dx(zeros<vec>(3)){
 	this->id = rand();
 	this->visible = true;
 	mp->populate(this);

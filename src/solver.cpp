@@ -28,27 +28,40 @@ void Solver::step( Simulation& s ){
 		double alpha = go->getShape()->getAlpha();
 
 		Debug::log(string("Evolving points"), LOOP );
+		vec vi;
 
 		for( int i = 0; i < points.size(); i++ ){
 			vec x = points[i]->x;
 			vec g = points[i]->g;
 			vec f = points[i]->f;
 			double m = points[i]->m;
-			
-			points[i]->pre = new Point(*(points[i]));
+			if( points[i]->move )
+				points[i]->pre = new Point(*(points[i]));
 			
 			// Modified Euler
 			// points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->vi/m;			
 			// points[i]->ve += h*f/m + alpha*points[i]->vc/h;
 			// points[i]->v = points[i]->vi + points[i]->ve;
-			if( norm(points[i]->vc) > 0.0 )
-				cout << "Spring force: " << printvec(-alpha*( x - g )/h) << ", Reaction: " << printvec(alpha*points[i]->vc/h) << endl;
+			// if( norm(points[i]->vc) == 0.0 ){
+			// 	vi = -alpha*( x - g )/h;
+			// }else
+			// 	vi = zeros<vec>(3);
 
-			points[i]->v += -alpha*( x - g )/h + h*f/m + alpha*points[i]->vc/h;
+			if( points[i]->move )
+				vi = -alpha*( x - g )/h;
+			else
+				vi = zeros<vec>(3);
+			
+			int nn = points.size();
+			// int nn = 1;
+			points[i]->v += vi + h*f/m + alpha*go->dx/(h*nn);
+			// points[i]->v += vi + h*f/m + alpha*points[i]->vc/(h*nn);
 
 			points[i]->vc = zeros<vec>(3);			
-			this->t += h;			
+						
 		}
+
+		go->dx = zeros<vec>(3);
 	}
 
 	// Free points that will separate to move in this step
@@ -74,6 +87,7 @@ void Solver::step( Simulation& s ){
 		Debug::log(string("Euler step done!"), LOOP );
 	}
 
+	this->t += h;
 	// Move Rigid bodies
 	// TO-DO
 }
