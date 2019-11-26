@@ -118,8 +118,8 @@ void SignoriniContact::solveContactRegion(){
 		Point *p = ci.point;
 		Face *f = ci.face;
 
-		if( !p->move )
-		 	continue;
+		// if( !p->move )
+		//  	continue;
 
 		p->move = false; // This point won't move anymore until free
 		Edge e( p->pre, p );
@@ -147,16 +147,15 @@ void SignoriniContact::resolve(){
 		
 		
 		if( vrel < 0 )
-			go->dx += -dx;
+			// go->dx += -vrel*n;
 			// go->dx +=-vrel*n;
-			// p->vc = -vrel*n;
-
-
+			p->vc = -vrel*n;
 	}
+
 	cout << "Finish resolve"<<endl;
 
 	// }
-	// cin.get();
+	//cin.get();
 }
 
 void SignoriniContact::prunePoints(){
@@ -170,9 +169,9 @@ void SignoriniContact::prunePoints(){
 		Point *p = (*it).point;
 		Face *f = (*it).face;
 
-		double gp = dot( p->g)
+		// double gp = dot( p->g)
 		// Normal pressure
-		double vel = dot(p->v, f->normal);
+		double vel = dot(p->v - p->x, f->normal);
 		double acc = dot(p->v - p->pre->v, f->normal);
 
 		cout << "Actual velocity: " << printvec(p->v) << endl;
@@ -188,13 +187,13 @@ void SignoriniContact::prunePoints(){
 		}
 	}
 
-	//cout << "Contacts to erase: " << toDel.size() << " of " << collisions.size() << endl;
+	cout << "Contacts to erase: " << toDel.size() << " of " << collisions.size() << endl;
 
 	for( vector<CollisionInformation>::iterator it: toDel )
 		collisions.erase(it);
 
 	cout << "Finish prunning" << endl;
-	//cout << "After erasing: " << collisions.size() << endl;
+	cout << "After erasing: " << collisions.size() << endl;
 	// cin.get();
 	Debug::log(string("Contacts prunned"), LOOP);
 }

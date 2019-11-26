@@ -20,6 +20,7 @@ void Solver::step( Simulation& s ){
 	// External forces and reactions based upon the goals
 	Debug::log(string("Computing external forces"), LOOP );
 	s.computeExternalForces();
+	int mp = 0;
 
 	// Evolve speeds
 	for( SoftBody *go : s.getSoftBodies() ){
@@ -35,8 +36,12 @@ void Solver::step( Simulation& s ){
 			vec g = points[i]->g;
 			vec f = points[i]->f;
 			double m = points[i]->m;
-			if( points[i]->move )
+
+			if( points[i]->move ){
 				points[i]->pre = new Point(*(points[i]));
+			}else{
+				mp++;
+			}
 			
 			// Modified Euler
 			// points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->vi/m;			
@@ -47,23 +52,26 @@ void Solver::step( Simulation& s ){
 			// }else
 			// 	vi = zeros<vec>(3);
 
-			if( points[i]->move )
+			if( norm(points[i]->vc) == 0.0 )
 				vi = -alpha*( x - g )/h;
 			else
 				vi = zeros<vec>(3);
 			
-			int nn = points.size();
-			// int nn = 1;
-			points[i]->v += vi + h*f/m + alpha*go->dx/(h*nn);
-			// points[i]->v += vi + h*f/m + alpha*points[i]->vc/(h*nn);
+			//int nn = points.size();
+			int nn = 1;
+			// points[i]->v += vi + h*f/m + alpha*go->dx/(h*nn);
+			points[i]->v += vi + h*f/m + alpha*points[i]->vc/(h*nn);
 
 			points[i]->vc = zeros<vec>(3);			
-						
+			
+
 		}
 
 		go->dx = zeros<vec>(3);
 	}
 
+	cout << "(Before)Total number of points unable to move: " << mp << endl;
+	mp = 0;
 	// Free points that will separate to move in this step
 	Debug::log(string("Prunning contacts"), LOOP );
 	s.collisionMgr.pruneContacts();
@@ -78,6 +86,7 @@ void Solver::step( Simulation& s ){
 
 			// Not move points that aren't allowed
 			if( !points[i]->move ){
+				mp++;
 				continue;
 			}
 			
@@ -87,6 +96,8 @@ void Solver::step( Simulation& s ){
 		Debug::log(string("Euler step done!"), LOOP );
 	}
 
+	cout << "(After)Total number of points unable to move: " << mp << endl;
+	cin.get();
 	this->t += h;
 	// Move Rigid bodies
 	// TO-DO
