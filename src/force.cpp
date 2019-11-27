@@ -32,7 +32,7 @@ void GravityForce::apply( GeometricObject *go ){
 
 	for( Point *p : points ){
 		p->f[0] = 0.0;
-		p->f[1] = -0.5;
+		p->f[1] = -5.0;
 		p->f[2] = 0.0;
 	}	
 }

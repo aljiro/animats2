@@ -145,9 +145,10 @@ void SignoriniContact::resolve(){
 		double vrel = dot(n, dx);
 		cout << "Relative velocity: " << vrel << endl;
 		
+		//p->v = zeros<vec>(3);
 		
 		if( vrel < 0 )
-			// go->dx += -vrel*n;
+			//go->dx += -vrel*n;
 			// go->dx +=-vrel*n;
 			p->vc = -vrel*n;
 	}
@@ -160,18 +161,18 @@ void SignoriniContact::resolve(){
 
 void SignoriniContact::prunePoints(){
 	Debug::log(string("Prunning signirini contact"), LOOP);
-	vector<vector<CollisionInformation>::iterator> toDel;
+	vector<int> toDel;
 
 	cout << "Number of contact points: " << collisions.size()<<endl;
 
-	for( vector<CollisionInformation>::iterator it = collisions.begin(); 
-		it != collisions.end(); ++it ){
-		Point *p = (*it).point;
-		Face *f = (*it).face;
+	for( int i = 0; i < collisions.size(); i++ ){
+
+		Point *p = collisions[i].point;
+		Face *f = collisions[i].face;
 
 		// double gp = dot( p->g)
 		// Normal pressure
-		double vel = dot(p->v - p->x, f->normal);
+		double vel = dot(p->v, f->normal);
 		double acc = dot(p->v - p->pre->v, f->normal);
 
 		cout << "Actual velocity: " << printvec(p->v) << endl;
@@ -182,16 +183,28 @@ void SignoriniContact::prunePoints(){
 			p->move = true;
 			//p->vc = zeros<vec>(3);
 			Debug::log(string("Erasing contact"), LOOP);
-			toDel.push_back(it);
+			toDel.push_back(i);
 			Debug::log(string("Done"), LOOP);
 		}
 	}
 
 	cout << "Contacts to erase: " << toDel.size() << " of " << collisions.size() << endl;
+	vector<CollisionInformation> cis;
+	int p = 0;
+	int k = 0;
 
-	for( vector<CollisionInformation>::iterator it: toDel )
-		collisions.erase(it);
+	for( int i = 0; i < collisions.size(); i++ ){
+		p = (k < toDel.size())? toDel[k] : -1;
+		
+		if( i == p ){
+			k++;
+			continue;
+		}
 
+		cis.push_back( collisions[i] );
+	}
+
+	collisions = cis;
 	cout << "Finish prunning" << endl;
 	cout << "After erasing: " << collisions.size() << endl;
 	// cin.get();
