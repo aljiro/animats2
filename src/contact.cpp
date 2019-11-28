@@ -123,6 +123,8 @@ void SignoriniContact::solveContactRegion(){
 
 		p->move = false; // This point won't move anymore until free
 		Edge e( p->pre, p );
+
+		p->vi = p->x - f->getFaceProjection2( e );
 		p->x = f->getFaceProjection2( e );
 	}
 }
@@ -150,7 +152,9 @@ void SignoriniContact::resolve(){
 		if( vrel < 0 )
 			//go->dx += -vrel*n;
 			// go->dx +=-vrel*n;
-			p->vc = -vrel*n;
+			p->vc = dx - p->vi;
+		else
+			p->vc = zeros<vec>(3);
 	}
 
 	cout << "Finish resolve"<<endl;

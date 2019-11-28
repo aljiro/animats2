@@ -60,7 +60,7 @@ void Solver::step( Simulation& s ){
 			int nn = points.size();
 			// int nn = 1;
 			//points[i]->v += vi + h*f/m + alpha*go->dx/(h*nn);
-			points[i]->v += vi;// + alpha*points[i]->vc/(h*nn);
+			points[i]->v += vi - alpha*points[i]->vc/(h);
 			points[i]->vc = zeros<vec>(3);			
 			
 
