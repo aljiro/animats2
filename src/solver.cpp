@@ -52,8 +52,11 @@ void Solver::step( Simulation& s ){
 			// }else
 			// 	vi = zeros<vec>(3);
 
-			if( norm(points[i]->vc) == 0.0 )
+			if( norm(points[i]->vc) == 0.0 ){
+				cout << "Comparing values: DV_t = " << printvec( alpha*go->dx/h ) << 
+					    ", DV_numeric: " << printvec(alpha*( x - g )/h) << endl;
 				vi = -alpha*( x - g )/h + h*f/m;
+			}
 			else
 				vi = zeros<vec>(3);
 			
@@ -96,7 +99,7 @@ void Solver::step( Simulation& s ){
 	}
 
 	cout << "(After)Total number of points unable to move: " << mp << endl;
-	cin.get();
+	// cin.get();
 	this->t += h;
 	// Move Rigid bodies
 	// TO-DO
