@@ -128,6 +128,7 @@ void SignoriniContact::solveContactRegion(){
 		p->x = f->getFaceProjection2( e );
 		p->v = zeros<vec>(3);
 	}
+
 }
 
 void SignoriniContact::resolve(){
@@ -141,6 +142,8 @@ void SignoriniContact::resolve(){
 		Point *p = (*it).point; // Point at which the collition is hapenning
 		Face *f = (*it).face;
 		GeometricObject *go = (*it).goPoint;
+
+		go->dx += p->vi/go->getPoints().size();
 		
 		vec dx = p->g -  p->x;
 		// Adding colliding force
@@ -153,7 +156,7 @@ void SignoriniContact::resolve(){
 		if( vrel < 0 )
 			//go->dx += -vrel*n;
 			// go->dx +=-vrel*n;
-			p->vc = dx - p->vi;
+			p->vc = dot((dx - p->vi), n)*n;
 		else
 			p->vc = zeros<vec>(3);
 	}
@@ -161,7 +164,7 @@ void SignoriniContact::resolve(){
 	cout << "Finish resolve"<<endl;
 
 	// }
-	//cin.get();
+	cin.get();
 }
 
 void SignoriniContact::prunePoints(){

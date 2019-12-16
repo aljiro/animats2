@@ -52,8 +52,16 @@ void Solver::step( Simulation& s ){
 			// }else
 			// 	vi = zeros<vec>(3);
 
+<<<<<<< HEAD
 			if( norm(points[i]->vc) == 0.0 )
 				vi = -alpha*( x - g )/h;
+=======
+			if( norm(points[i]->vc) == 0.0 ){
+				cout << "Comparing values: DV_t = " << printvec( alpha*go->dx/h ) << 
+					    ", DV_numeric: " << printvec(alpha*( x - g )/h) << endl;
+				vi = -alpha*( x - g )/h + h*f/m;
+			}
+>>>>>>> 21b2c4553f96365ca4d0af49b279d011eca1da8f
 			else
 				vi = zeros<vec>(3);
 
