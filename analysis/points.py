@@ -3,10 +3,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+figNum = 0
+X = np.array([])
+
+def onclick(event):
+    global figNum
+
+    m,n = X.shape
+    event.canvas.figure.clear()
+    event.canvas.figure.gca().plot(X[:,figNum])
+    event.canvas.draw()
+    figNum += 1
+
+    if figNum >= n:
+        plt.close()
+
 
 def plotPoints( fileName, idxs = -1 ):
+    global X
+
     f = open( fileName, 'r' )
-    X = np.array([])
 
     for line in f:
         positions = line.split(',')
@@ -20,10 +36,8 @@ def plotPoints( fileName, idxs = -1 ):
         else:
             X = np.append(X, data, axis=0)
 
-    m,n = X.shape
-
-    for i in range(n):
-        plt.plot( X[:,i] + np.ones(m)*i)
+    fig = plt.figure()
+    fig.canvas.mpl_connect('button_press_event', onclick)
     #plt.plot( X[:,np.random.randint(n)] )
 
     plt.show()

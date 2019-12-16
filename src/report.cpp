@@ -31,7 +31,7 @@ void ReportView::dumpPoints( Simulation& s ){
 		}
 
 		if( !b->getPoints().empty() )
-			fpoints << norm(b->getPoints().back()->x) << endl;
+			fpoints << norm(b->getPoints().back()->v) << endl;
 	}
 }
 

@@ -10,13 +10,8 @@
 
 	<animat id="1" visible="true">
 		<scale>(0.3,0.3,0.3)</scale>
-<<<<<<< HEAD
-		<position>(0.0,0.3,0.1)</position>
-		<softness>0.3</softness>
-=======
 		<position>(0.0,0.2,0.1)</position>
 		<softness>0.5</softness>
->>>>>>> 21b2c4553f96365ca4d0af49b279d011eca1da8f
 	</animat>
 
 	

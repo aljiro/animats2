@@ -36,42 +36,10 @@ void Solver::step( Simulation& s ){
 			vec g = points[i]->g;
 			vec f = points[i]->f;
 			double m = points[i]->m;
-
-			//if( points[i]->move ){
-				points[i]->pre = new Point(*(points[i]));
-			// }else{
-			//  	mp++;
-			// }
 			
-			// Modified Euler
-			// points[i]->vi += -alpha*( x - g )/h - h*c*points[i]->vi/m;			
-			// points[i]->ve += h*f/m + alpha*points[i]->vc/h;
-			// points[i]->v = points[i]->vi + points[i]->ve;
-			// if( norm(points[i]->vc) == 0.0 ){
-			// 	vi = -alpha*( x - g )/h;
-			// }else
-			// 	vi = zeros<vec>(3);
-
-<<<<<<< HEAD
-			if( norm(points[i]->vc) == 0.0 )
-				vi = -alpha*( x - g )/h;
-=======
-			if( norm(points[i]->vc) == 0.0 ){
-				cout << "Comparing values: DV_t = " << printvec( alpha*go->dx/h ) << 
-					    ", DV_numeric: " << printvec(alpha*( x - g )/h) << endl;
-				vi = -alpha*( x - g )/h + h*f/m;
-			}
->>>>>>> 21b2c4553f96365ca4d0af49b279d011eca1da8f
-			else
-				vi = zeros<vec>(3);
-
-			if( points[i]->move )
-				 vi+= h*f/m;
-			
-			int nn = points.size();
-			// int nn = 1;
-			//points[i]->v += vi + h*f/m + alpha*go->dx/(h*nn);
-			points[i]->v += vi + h*c*points[i]->v/m;//- alpha*points[i]->vc/(h);
+			points[i]->pre = new Point(*(points[i]));
+		
+			points[i]->v += -alpha*( x - g )/h + h*f/m;//- alpha*points[i]->vc/(h);
 			points[i]->vc = zeros<vec>(3);			
 			
 
@@ -107,7 +75,7 @@ void Solver::step( Simulation& s ){
 	}
 
 	cout << "(After)Total number of points unable to move: " << mp << endl;
-	// cin.get();
+	cin.get();
 	this->t += h;
 	// Move Rigid bodies
 	// TO-DO

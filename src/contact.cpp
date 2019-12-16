@@ -143,28 +143,13 @@ void SignoriniContact::resolve(){
 		Face *f = (*it).face;
 		GeometricObject *go = (*it).goPoint;
 
-		go->dx += p->vi/go->getPoints().size();
-		
-		vec dx = p->g -  p->x;
-		// Adding colliding force
-		vec n = f->normal;
-		double vrel = dot(n, dx);
-		cout << "Relative velocity: " << vrel << endl;
-		
-		//p->v = zeros<vec>(3);
-		
-		if( vrel < 0 )
-			//go->dx += -vrel*n;
-			// go->dx +=-vrel*n;
-			p->vc = dot((dx - p->vi), n)*n;
-		else
-			p->vc = zeros<vec>(3);
+		// Adding reaction
 	}
 
 	cout << "Finish resolve"<<endl;
 
 	// }
-	cin.get();
+	//cin.get();
 }
 
 void SignoriniContact::prunePoints(){
@@ -185,7 +170,7 @@ void SignoriniContact::prunePoints(){
 
 		cout << "Actual velocity: " << printvec(p->v) << endl;
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  acc >= 0.0 ){//} && norm(p->v) > 0.01 ){
+		if(  vel >= 0.0 ){//} && norm(p->v) > 0.01 ){
 			cout << "Prunning point!" << endl;
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
