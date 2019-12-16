@@ -2,7 +2,6 @@
 #define CONTACT_H 
 
 #include "gobject.h"
-
 #include <vector>
 #include <iostream>
 

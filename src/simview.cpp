@@ -412,7 +412,6 @@ char* SimView::checkErrors(){
 
 SimView::~SimView(){
     glDeleteProgram(this->shaderId);
-
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
 }

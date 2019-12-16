@@ -124,8 +124,9 @@ void SignoriniContact::solveContactRegion(){
 		p->move = false; // This point won't move anymore until free
 		Edge e( p->pre, p );
 
-		p->vi = p->x - f->getFaceProjection2( e );
+		//p->vi = p->x - f->getFaceProjection2( e );
 		p->x = f->getFaceProjection2( e );
+		p->v = zeros<vec>(3);
 	}
 }
 
@@ -141,7 +142,7 @@ void SignoriniContact::resolve(){
 		Face *f = (*it).face;
 		GeometricObject *go = (*it).goPoint;
 		
-		vec dx = p->g - p->x;
+		vec dx = p->g -  p->x;
 		// Adding colliding force
 		vec n = f->normal;
 		double vrel = dot(n, dx);
@@ -181,7 +182,7 @@ void SignoriniContact::prunePoints(){
 
 		cout << "Actual velocity: " << printvec(p->v) << endl;
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if(  vel >= 0.0 ){//} && norm(p->v) > 0.01 ){
+		if(  acc >= 0.0 ){//} && norm(p->v) > 0.01 ){
 			cout << "Prunning point!" << endl;
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			p->move = true;
@@ -503,7 +504,8 @@ void DeformableContact::prunePoints(){
 	Debug::log(string("Prunning deformable contact"), LOOP);
 
 	if( collisionsA.size() > 3 || collisionsB.size() > 3 )
-	this->react = true;
+		this->react = true;
+	
 	pruneCollisionList( collisionsA, A );
 	pruneCollisionList( collisionsB, B );	
 

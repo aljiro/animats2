@@ -82,6 +82,7 @@ void Simulation::run( int maxSteps ){
 	while( this->running ){
 		collisionMgr.findCollisions( this->step );
 		collisionMgr.solveRegions( this->step );
+
 		Debug::log(string("Solver step"), LOOP );		
 		solver.step( *this );
 		//collisionMgr.pruneContacts();
