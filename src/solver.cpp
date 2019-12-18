@@ -38,8 +38,9 @@ void Solver::step( Simulation& s ){
 			double m = points[i]->m;
 			
 			points[i]->pre = new Point(*(points[i]));
-		
-			points[i]->v += -alpha*( x - g )/h + h*f/m;//- alpha*points[i]->vc/(h);
+			
+			if( points[i]->move )
+				points[i]->v += -alpha*( x - g )/h + h*f/m;//- alpha*points[i]->vc/(h);
 			points[i]->vc = zeros<vec>(3);			
 			
 
@@ -75,7 +76,7 @@ void Solver::step( Simulation& s ){
 	}
 
 	cout << "(After)Total number of points unable to move: " << mp << endl;
-	cin.get();
+	// cin.get();
 	this->t += h;
 	// Move Rigid bodies
 	// TO-DO

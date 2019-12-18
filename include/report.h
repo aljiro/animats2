@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include "simulation.h"
+#include "contact.h"
 #include "gobject.h"
 #include "view.h"
 

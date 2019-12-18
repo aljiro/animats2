@@ -23,10 +23,11 @@ typedef struct {
 
 class Contact{
 protected:
-	GeometricObject *A;
-	GeometricObject *B;
+	
 	
 public:
+	GeometricObject *A;
+	GeometricObject *B;
 
 	explicit Contact(  GeometricObject* A, GeometricObject* B  );
 
@@ -46,8 +47,10 @@ class SignoriniContact: public Contact{
  * The solution of the collision region is perform by projection onto the given face
  */
 private:
-	vector<CollisionInformation> collisions;
+	
 public:
+	vector<CollisionInformation> collisions;
+	
 	SignoriniContact( SoftBody *sb, RigidBody *rb );
 	void addCollision( CollisionInformation ci );
 	void prunePoints();

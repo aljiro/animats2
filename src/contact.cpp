@@ -144,6 +144,7 @@ void SignoriniContact::resolve(){
 		GeometricObject *go = (*it).goPoint;
 
 		// Adding reaction
+		p->v = zeros<vec>(3);
 	}
 
 	cout << "Finish resolve"<<endl;
@@ -247,8 +248,7 @@ bool DeformableContact::isContactRegionValid(){
 		Edge e( p->pre, p );
 
 		// if( !f->isInside(p->x)){
-		if( f->getPenetrationDepth2(e) > 0.01 ){
-			
+		if( f->getPenetrationDepth2(e) > 0.01 ){			
 			valid = false;
 			break;
 		}

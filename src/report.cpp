@@ -16,11 +16,15 @@ void ReportView::notify( Simulation& s, std::string message ){
 }
 	
 void ReportView::setup( Simulation& s ){
-	fpoints.open("points.csv", ios::out | ios::trunc );
+	if( options & ReportView::DUMP_POINTS )
+		fpoints.open("points.csv", ios::out | ios::trunc );
+
+	if( options & ReportView::DUMP_CONTACTS )
+		fcontacts.open("contacts.csv", ios::out | ios::trunc );
 }
 	
 void ReportView::dumpPoints( Simulation& s ){
-	cout << "Dumping points!" << endl;
+	cout << "Dumping points" << endl;
 
 	for( SoftBody *b : s.getSoftBodies() ){
 		fpoints << b->getId() << ",";
@@ -36,9 +40,20 @@ void ReportView::dumpPoints( Simulation& s ){
 }
 
 void ReportView::dumpContactArea( Simulation& s ){
+	cout << "Dumping contacts" << endl;
+	ContactList *cl = s.collisionMgr.getContactList();
+	double area;
 
+	for( Contact *c : cl->getContacts() ){
+		cout << ">> Size of the collisions: " << ((SignoriniContact *)c)->collisions.size() << endl;
+		area = ((SignoriniContact *)c)->collisions.size();
+		fcontacts << area << endl;
+	}
+
+	//cin.get();
 }
 
 ReportView::~ReportView(){
 	fpoints.close();
+	fcontacts.close();
 }
