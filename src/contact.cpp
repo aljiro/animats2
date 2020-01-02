@@ -419,14 +419,16 @@ void DeformableContact::resolve(){
 	// for(CollisionInformation ci : collisionsA){
 	// 	Point *p = ci.point;
 		p->pre->v = zeros<vec>(3);
-		p->v = j*n;
+		// p->v = j*n;
+		p->v = zeros<vec>(3);
 	}
 
 	for( Point *p : B->getPoints() ){
 	// for(CollisionInformation ci : collisionsB){
 	// 	Point *p = ci.point;
 		p->pre->v = zeros<vec>(3);	
-		p->v = -j*n;
+		// p->v = -j*n;
+		p->v = zeros<vec>(3);
 	}
 
 	
