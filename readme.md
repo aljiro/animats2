@@ -1,10 +1,8 @@
 ## Introduction
-Basic examples of opengl programming
+Soft body simulation engine.
 
 ## Dependencies
-- glfw 3.3
-- glew
-- glm
+- armadillo
 
 ## Building
 

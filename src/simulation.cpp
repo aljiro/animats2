@@ -107,7 +107,6 @@ RigidBody* Simulation::addRigidBody( int id, string type ){
 		mp = new PlaneMeshProvider();
 		rb = new RigidBody( mp );
 	}
-
 	
 	this->rigidBodies.push_back( rb );
 	return rb;

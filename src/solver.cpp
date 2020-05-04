@@ -41,9 +41,8 @@ void Solver::step( Simulation& s ){
 			
 			if( points[i]->move )
 				points[i]->v += -alpha*( x - g )/h + h*f/m;//- alpha*points[i]->vc/(h);
-			points[i]->vc = zeros<vec>(3);			
 			
-
+			points[i]->vc = zeros<vec>(3);			
 		}
 
 		go->dx = zeros<vec>(3);

@@ -103,7 +103,7 @@ public:
 	Contact *addNewContact( GeometricObject *A, GeometricObject *B );
 	void add( GeometricObject *A, GeometricObject *B, CollisionInformation ci );
 	void clear();
-	vector<Contact *> getContacts();
+	vector<Contact *>& getContacts();
 	void resolveForces();
 };
 

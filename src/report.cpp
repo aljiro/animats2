@@ -44,13 +44,15 @@ void ReportView::dumpContactArea( Simulation& s ){
 	ContactList *cl = s.collisionMgr.getContactList();
 	double area;
 
+	cout << ">>>>> Number of contacts: " << cl->getContacts().size() << endl;
+
 	for( Contact *c : cl->getContacts() ){
 		cout << ">> Size of the collisions: " << ((SignoriniContact *)c)->collisions.size() << endl;
 		area = ((SignoriniContact *)c)->collisions.size();
 		fcontacts << area << endl;
 	}
 
-	//cin.get();
+	cin.get();
 }
 
 ReportView::~ReportView(){

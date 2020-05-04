@@ -13,18 +13,12 @@
 #include "gobject.h"
 #include "face.h"
 #include "util.h"
+#include "chashtable.h"
 
 using namespace std;
 using namespace arma;
 
 namespace morph{ namespace animats{
-
-
-
-typedef struct {
-	list<int> items;
-	int timestamp;
-} CHashItem;
 
 typedef struct {
 	Point* point;
@@ -39,26 +33,9 @@ typedef struct {
 	int originalIdx;
 } CFace;
 
-
-class CHashTable{
-
-	const unsigned long p1 = 73856093;
-	const unsigned long p2 = 19349663;
-	const unsigned long p3 = 83492791;
-public:
-	int n;
-	double l; // Cell size
-	CHashTable( int n, double l );
-	vector<CHashItem> hashes;
-
-	int discretize( double a );
-	void discretizeBox( Box *b );
-	unsigned int getHash( vec point );
-	unsigned int getHashDiscrete( vec p );
-	void hashIn( vec point, int index, int step ); 
-	CHashItem getItem( unsigned int h );
-
-};
+/**
+ CollisionManager - Manages the collisions in space.
+ */
 
 class CollisionManager{
 private:

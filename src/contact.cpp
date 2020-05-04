@@ -56,7 +56,7 @@ void ContactList::clear(){
 	contacts.clear();
 }
 
-vector<Contact *> ContactList::getContacts(){
+vector<Contact *>& ContactList::getContacts(){
 	return contacts;
 }
 
@@ -430,10 +430,6 @@ void DeformableContact::resolve(){
 		// p->v = -j*n;
 		p->v = zeros<vec>(3);
 	}
-
-	
-
-	
 
 }
 
