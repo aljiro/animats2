@@ -7,20 +7,23 @@ using namespace arma;
 
 namespace morph{ namespace animats{
 
+enum PointState {Free, Invalid, Quiescent};
+
+/**
+ * Point - Stateful representation of the points.
+ */
 class Point{
 private:
 	vec color;
 public:
 	vec x;
 	vec v;
-	vec vi; // Internal forces
-	vec ve; // External forces
-	vec vc; // Reaction
+	vec xc; // Reaction
 	vec g; // Goal point
 	float m;
 	vec f;
 
-	bool move;
+	PointState state;
 	Point *pre;
 
 	explicit Point( vec x, float m = 1.0, vec color = {0.5, 0.5, 0.5} );
@@ -28,7 +31,6 @@ public:
 	//Point& operator=( const Point& p ); // Copy assignment operator
 
 	vec getColor();
-
 	~Point();
 };
 

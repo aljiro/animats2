@@ -36,7 +36,6 @@ typedef struct {
 /**
  CollisionManager - Manages the collisions in space.
  */
-
 class CollisionManager{
 private:
 	vector<CPoint> points;
@@ -52,8 +51,10 @@ private:
 	void handleCollisions( CFace cf, CHashItem chi, int step );
 	void storeCollision( CFace& cf, CPoint& cp );
 	void evaluateContacts( CFace cf, int step );
-	void firstPass( int step ); // Hashes points and computes aabb
-	void secondPass( int step ); // Check the faces and handles collisions
+	// Hashes points and computes aabb
+	void firstPass( int step ); 
+	// Check the faces and handles collisions
+	void secondPass( int step ); 
 public:
 	explicit CollisionManager();
 
@@ -69,4 +70,4 @@ public:
 };
 
 }}
-#endif
+#endif //COLLISION_H

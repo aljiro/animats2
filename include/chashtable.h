@@ -1,5 +1,5 @@
-#ifndef COLLISION_H
-#define COLLISION_H 
+#ifndef CHASHTABLE_H
+#define CHASHTABLE_H 
 
 #include <map>
 #include <list>
@@ -42,5 +42,5 @@ public:
 
 };
 
-}
-#endif // CHASH_TABLE_H
+}}
+#endif // CHASHTABLE_H

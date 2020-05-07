@@ -3,19 +3,19 @@
 using namespace morph::animats;
 
 // Private
-Simulation::Simulation( string workingDir ):running(false), workingDir(workingDir){
+Simulation::Simulation( string workingDir ):running(false), pause(false), workingDir(workingDir){
 	forceChain = NULL;
 }
 
 // Public 
 void Simulation::computeExternalForces(){
-	Debug::log(string("Adding contact forces"), LOOP );
+	debugger.log(string("Adding contact forces"), LOOP, "SIMULATION" );
 	collisionMgr.getContactList()->resolveForces();	
 
 	if( this->forceChain == NULL )
 		return;
 
-	Debug::log(string("Resolving the force chain"), LOOP );
+	debugger.log(string("Resolving the force chain"), LOOP, "SIMULATION" );
 
 	for( GeometricObject *go : this->softBodies )
 		this->forceChain->applyForce( go );
@@ -25,15 +25,14 @@ void Simulation::computeExternalForces(){
 }
 
 void Simulation::registerObjectsForCollision(){
-    Debug::log(string("Registering rigid bodies"));
+    debugger.log(string("Registering rigid bodies"), GENERAL, "SIMULATION");
     collisionMgr.clear();
     
-    for( RigidBody *rb : this->rigidBodies )
-    {        
+    for( RigidBody *rb : this->rigidBodies ){        
         collisionMgr.registerObject(rb);
     }
     
-    Debug::log(string("Registering animats"));
+    debugger.log(string("Registering animats"), GENERAL, "SIMULATION");
     for( SoftBody *sb: this->softBodies ){        
         collisionMgr.registerObject( sb ); 
     }
@@ -45,6 +44,7 @@ void Simulation::addForce( ForceObject *fo ){
 	else
 		this->forceChain->add( fo );
 }
+
 void Simulation::reset(){
 
 	// for(  SoftBody *sb : softBodies ){
@@ -54,10 +54,10 @@ void Simulation::reset(){
 	// for( RigidBody *rb : rigidBodies ){
 	// 	rb->reset();
 	// }
-
 	initShapes();
 	registerObjectsForCollision();
-	Debug::log(string("Setting up the views"));	
+	debugger.log(string("Setting up the views"), GENERAL, "SIMULATION");
+
 	for( View *v : views)
 		v->setup( *this );
 }
@@ -74,29 +74,32 @@ void Simulation::close(){
 	this->running = false;
 }
 
+void Simulation::togglePause(){
+	this->pause = !this->pause;
+}
+
 void Simulation::run( int maxSteps ){
-	Debug::log(string("Running the simulation"));
+	debugger.log(string("Running the simulation"), GENERAL, "SIMULATION");
 	Solver solver;
 	this->running = true;
 
 	while( this->running ){
-		collisionMgr.findCollisions( this->step );
-		collisionMgr.solveRegions( this->step );
-
-		Debug::log(string("Solver step"), LOOP );		
-		solver.step( *this );
-		//collisionMgr.pruneContacts();
-		Debug::log(string("Notifying views"), LOOP );
+		if( !this->pause ){
+			collisionMgr.findCollisions( this->step );
+			//collisionMgr.solveRegions( this->step );
+			solver.step( *this );
+			collisionMgr.pruneContacts();
+			this->step++;
+		}
 		this->notifyViews( string("Simulation step: ") + to_string(this->step) );
-		this->step++;
-
+		
 		if( maxSteps > 0 && this->step > maxSteps )
 			this->running = false;
 	}
 }
 
 RigidBody* Simulation::addRigidBody( int id, string type ){
-	Debug::log(string("Adding a new rigid body"));
+	debugger.log(string("Adding a new rigid body"), GENERAL, "SIMULATION");
 	MeshProvider *mp;
 	RigidBody* rb;
 
@@ -114,14 +117,13 @@ RigidBody* Simulation::addRigidBody( int id, string type ){
 
 void Simulation::initShapes(){
 	for(SoftBody *sb : softBodies){
-
 		sb->initShape();
 	}
 }
 
 
 SoftBody* Simulation::addSoftBody( int id ){
-	Debug::log(string("Adding a new soft body"));
+	debugger.log(string("Adding a new soft body"), GENERAL, "SIMULATION");
 	string path = this->workingDir + string("/mesh.obj");
 	SoftBody *s = new SoftBody( new ObjMeshProvider( path.c_str() ) );
 	s->setId( id );
@@ -136,7 +138,7 @@ Simulation* Simulation::load( char *name ){
 	try{
 		Simulation *s = new Simulation( string(name) );
 		loader.load( s, name );
-		Debug::log(string("Simulation loaded!"));
+		debugger.log(string("Simulation loaded!"), GENERAL, "SIMULATION");
 		return s;
 	}catch(const std::exception& e ){
 		return NULL;

@@ -26,7 +26,7 @@ SimView::SimView( Simulation& s ):shaderId(-1), colorId(-1){
 }
 
 int SimView::init(){
-	Debug::log(string("Initializing SimView"));
+	debugger.log(string("Initializing SimView"), GENERAL, "SIMVIEW");
 	
 	// Initialise GLFW
     if( !glfwInit() )
@@ -73,7 +73,6 @@ int SimView::init(){
 }
 
 void SimView::setViewPort( vec p ){
-	Debug::log(string("Setting up viewport") + printvec(p));
 	cParams.position = glm::vec3(p(0), p(1), p(2));
 	cParams.direction = -cParams.position;
 	transformations();
@@ -121,7 +120,7 @@ void SimView::createBuffer( GeometricObject *go ){
 }
 
 void SimView::transformations( ){
-	Debug::log(string("Configuring transformation matrices"), LOOP);
+	debugger.log(string("Configuring transformation matrices"), LOOP, "SIMVIEW");
     this->P = glm::perspective( glm::radians(cParams.fov), (float)width/(float)height, 0.1f, 100.0f );
 	// Camera matrix
 	this->V = glm::lookAt(
@@ -131,7 +130,7 @@ void SimView::transformations( ){
 	);
 	this->M = glm::mat4(0.1f);
     this->MVP = this->P*this->V*this->M;
-    Debug::log(string("Matrices configured!"), LOOP);
+    debugger.log(string("Matrices configured!"), LOOP, "SIMVIEW");
 }
 
 void SimView::computeTransformationsFromInput(){
@@ -182,7 +181,7 @@ void SimView::computeTransformationsFromInput(){
 
 // Drawing routines
 void SimView::setup( Simulation &s ){
-	Debug::log(string("Setting up graphics"));
+	debugger.log(string("Setting up graphics"), GENERAL, "SIMVIEW");
 	// Initializing buffers for each object
 	vector<SoftBody *>& softBodies = s.getSoftBodies();
 	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
@@ -195,7 +194,7 @@ void SimView::setup( Simulation &s ){
 		createBuffer( rb );	
 	}
 
-	Debug::log(string("Loading shaders"));
+	debugger.log(string("Loading shaders"), GENERAL, "SIMVIEW");
 	// Loading shaders
 	this->shaderId = LoadShaders( "shaders/AnimatVertexShader.vsh", 
 							 	  "shaders/AnimatFragmentShader.fsh" );
@@ -239,8 +238,6 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	if( !go->isVisible() )
 		return;
 
-	Debug::log(string("Collecting object shape"), LOOP);
-
 	// Sending vertices to opengl
 	glBindVertexArray( go->VAO );
 	
@@ -266,7 +263,6 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 
 	glEnableVertexAttribArray(0);
 
-	Debug::log(string("Binding and initializing buffer"), LOOP);
 	glBindBuffer( GL_ARRAY_BUFFER, go->VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(shape), shape, GL_STATIC_DRAW );
 	
@@ -298,7 +294,6 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	// 	normals.push_back( cn ); 
 	// }
 
-	Debug::log(string("Binding normals"), LOOP);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, go->normalBuffer);
@@ -313,7 +308,6 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	 (void*)0                          // array buffer offset
 	);
 
-	Debug::log(string("Passing variables to the shader"), LOOP);
 	GLfloat color_soft[4] = {0.5f, 0.1f, 0.0f, 1.0f}; // Set according to heat
 	GLfloat color_hard[4] = {0.5f, 0.5f, 0.5f, 1.0f}; // Set according to heat
 	
@@ -331,14 +325,21 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	// glUniform4fv( this->lightPowerId, 1, &this->lightPower );
 	glUniform3fv( this->lightColorId, 1, this->lightColor );
 	glUniform3fv( this->lightPositionId, 1, this->lightPosition );
-
-	Debug::log(string("Drawing..."), LOOP);
 	
 	glDrawArrays( GL_TRIANGLES, 0, faces.size()*3 );
 }
 
 void SimView::notify( Simulation& s, std::string message ){
-	Debug::log(string("SimView Noti/fied."), LOOP);
+	debugger.log(string("SimView Noti/fied."), LOOP, "SIMVIEW");
+
+	if (glfwGetKey( this->window, GLFW_KEY_P ) == GLFW_PRESS){
+		s.pause = true;
+	}
+
+	if (glfwGetKey( this->window, GLFW_KEY_U ) == GLFW_PRESS){
+		s.pause = false;
+	}
+
 	computeTransformationsFromInput();
 	transformations();
 	this->draw( s );
@@ -349,7 +350,7 @@ void SimView::notify( Simulation& s, std::string message ){
 }
 
 void SimView::draw( Simulation& s ){
-	Debug::log(string("Drawing objects: setting up"), LOOP);
+	debugger.log(string("Drawing objects: setting up"), LOOP, "SIMVIEW");
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glBlendFunc( GL_SRC_ALPHA, GL_ONE );
@@ -358,18 +359,18 @@ void SimView::draw( Simulation& s ){
 	// Drawing rigid bodies first
 	vector<SoftBody *>& softBodies = s.getSoftBodies();
 	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
-	Debug::log(string("Drawing objects: Rigid bodies"), LOOP);
+	debugger.log(string("Drawing objects: Rigid bodies"), LOOP, "SIMVIEW");
 
 	for( RigidBody *rb : rigidBodies ){
 		drawObject( rb, 0 );
 	}
 	
-	Debug::log(string("Drawing objects: Soft bodies"), LOOP);
+	debugger.log(string("Drawing objects: Soft bodies"), LOOP, "SIMVIEW");
 	for( SoftBody *sb : softBodies ){
 		drawObject( sb, 1 );
 	}
 
-	Debug::log(string("Drawing objects: Swap and Poll"), LOOP);
+	debugger.log(string("Drawing objects: Swap and Poll"), LOOP, "SIMVIEW");
 	glfwSwapBuffers(this->window);
     glfwPollEvents();
 }

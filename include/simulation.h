@@ -16,7 +16,6 @@
 using namespace std;
 
 namespace morph{ namespace animats{
-
 class View;
 
 class Simulation{
@@ -34,27 +33,35 @@ private:
 
 	// State variables
 	bool running;
+	
 	unsigned int step;
 	string workingDir;
 
 
 	Simulation( string workingDir );
-
 public:
-
+	bool pause;
 	// Collision manager
 	CollisionManager collisionMgr;
 
 	static Simulation* load( char* name );
 
+	// Applies the external forces to the points
 	void computeExternalForces();
+	// Adds a new view to the simulation
 	void addView( View *view );
+	// Notifies the listening views of the opdate
 	void notifyViews( string msg );
 	void reset();
+	// Adds force to the force chain
 	void addForce( ForceObject *fo );
+	// Initialized the shape parameters of the soft bodies
 	void initShapes();
+	// Registers all the objects that should be taking into account
+	// by the collision manager
 	void registerObjectsForCollision();
 	void close();
+	void togglePause();
 
 	RigidBody *addRigidBody( int id, string type );
 	SoftBody *addSoftBody( int id );
@@ -67,4 +74,4 @@ public:
 
 }}
 
-#endif
+#endif // SIMULATION_H

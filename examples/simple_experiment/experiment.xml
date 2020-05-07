@@ -10,10 +10,14 @@
 
 	<animat id="1" visible="true">
 		<scale>(0.3,0.3,0.3)</scale>
-		<position>(0.0,0.2,0.1)</position>
-		<softness>0.2</softness>
+		<position>(0.0,0.1,0.1)</position>
+		<softness>0.1</softness>
 	</animat>
 
-
+	<animat id="1" visible="true">
+		<scale>(0.3,0.3,0.3)</scale>
+		<position>(0.1,0.7,0.1)</position>
+		<softness>0.1</softness>
+	</animat>
 
 </experiment>

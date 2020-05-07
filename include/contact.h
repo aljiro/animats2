@@ -32,20 +32,19 @@ public:
 	explicit Contact(  GeometricObject* A, GeometricObject* B  );
 
 	virtual void addCollision( CollisionInformation ci ) = 0;
-	virtual void prunePoints() = 0;
-	virtual void solveContactRegion() = 0;
 	virtual void resolve() = 0;
-	virtual bool isResting() = 0;
+	virtual bool prune() = 0;
 	~Contact();
 
 	friend ContactList;
 };
 
-class SignoriniContact: public Contact{
-/*
+
+/**
  * The Signorini contact consist of a SoftBody A and a RigidBody B
- * The solution of the collision region is perform by projection onto the given face
  */
+class SignoriniContact: public Contact{
+
 private:
 	
 public:
@@ -53,10 +52,8 @@ public:
 	
 	SignoriniContact( SoftBody *sb, RigidBody *rb );
 	void addCollision( CollisionInformation ci );
-	void prunePoints();
-	void solveContactRegion();
 	void resolve();
-	bool isResting();
+	bool prune();
 };
 
 class DeformableContact: public Contact{
@@ -70,29 +67,22 @@ class DeformableContact: public Contact{
 	bool react;
 public:
 	DeformableContact( SoftBody *A, SoftBody *B);
-	// void updateDisplacements();
-	// bool evaluateRegion();
 	void addCollision( CollisionInformation ci );
-	void prunePoints();
-	void computeSeparatingPlane();
-	void pruneCollisionList( vector<CollisionInformation>& collisions, GeometricObject *go );
-	bool isContactRegionValid();
-	void solveContactRegion();
 	void resolve();
-	bool isResting();
+	bool prune();
 };
 
 class RigidContact: public Contact{
 public:
 	RigidContact( RigidBody *A, RigidBody *B );
 	void addCollision( CollisionInformation ci );
-	void prunePoints();
-	void solveContactRegion();
 	void resolve();
-	bool isResting();
-
+	bool prune();
 };
 
+/**
+ * ContactList - Stores the list of all contacts in the simulation
+ */
 class ContactList{
 private:
 	vector<Contact *> contacts;
@@ -105,6 +95,7 @@ public:
 	void clear();
 	vector<Contact *>& getContacts();
 	void resolveForces();
+	void pruneContacts();
 };
 
 }}

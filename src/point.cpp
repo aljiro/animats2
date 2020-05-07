@@ -5,14 +5,12 @@ using namespace arma;
 
 Point::Point( vec x, float m, vec color ):x(x), 
 								     v(zeros<vec>(3)),
-								     vi(zeros<vec>(3)),
-								     ve(zeros<vec>(3)),
-								     vc(zeros<vec>(3)),
+								     xc(zeros<vec>(3)),
 								     g(zeros<vec>(3)),
 								     m(m), 
 								     f(zeros<vec>(3)),
 								     color(color),
-								     move(true){
+								     state(Free){
  	this->pre = NULL;
 
 }
@@ -21,11 +19,10 @@ Point::Point( const Point& p ){
 	this->color = vec(p.color);
 	this->x = vec(p.x);
 	this->v = vec(p.v);
-	this->vi = vec(p.vi);
-	this->ve = vec(p.ve);
-	this->vc = vec(p.vc);
+	this->xc = vec(p.xc);
 	this->g = vec(p.g);
 	this->m = p.m;
+	this->state = p.state;
 }
 
 vec Point::getColor(){

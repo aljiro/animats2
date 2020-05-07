@@ -27,7 +27,6 @@ void ForceObject::applyForce( GeometricObject* go ){
 GravityForce::GravityForce( ForceObject *fo ):ForceObject(fo){}
 
 void GravityForce::apply( GeometricObject *go ){
-	Debug::log( string("Applying gravity!"), LOOP );
 	vector<Point *>& points = go->getPoints();
 
 	for( Point *p : points ){

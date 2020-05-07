@@ -51,7 +51,6 @@ void GeometricObject::mapTransform( GeometricTransform& gt ){
 			((Plane *)this)->fixNormal();
 	}
 
-	cout<<"Finish faces tx"<<endl;
 }
 
 void GeometricObject::reset(){
@@ -81,7 +80,7 @@ void GeometricObject::addFace( int i1, int i2, int i3, vec normal ){
 }
 
 void GeometricObject::init( State initialState, double mass ){      
-	Debug::log(string("Initializing geometric object"));
+	debugger.log(string("Initializing geometric object"), GENERAL, "GEOMETRICOBJECT");
 	int n = this->points.size();
     // double pmass = mass/n;
     double pmass = mass;

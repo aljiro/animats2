@@ -12,7 +12,6 @@ void CollisionManager::clear(){
 	objects.clear();
 	points.clear();
 	faces.clear();
-
 	contacts->clear();
 }
 
@@ -28,16 +27,15 @@ void CollisionManager::findCollisions( int step ){
 }
 
 void CollisionManager::solveRegions( int step ){
-	Debug::log(string("Solving contact solveRegions"), LOOP);
-	for( Contact *c : contacts->getContacts() )
-		c->solveContactRegion();
-
+	debugger.log(string("Solving contact solveRegions"), LOOP);
+	// for( Contact *c : contacts->getContacts() )
+	// 	c->solveContactRegion();
 }
 
 void CollisionManager::registerObject(GeometricObject *go){
 
 	vector<int> objIdxs;
-	Debug::log(string("Registering objects for collision detection"));
+	debugger.log(string("Registering objects for collision detection"), LOOP, "COLLISION");
 	vector<Point*> gPoints = go->getPoints();
 	vector<Face*> gFaces = go->getFaces();
 	// Put all the pointers to points in the corresponding vector
@@ -52,8 +50,7 @@ void CollisionManager::registerObject(GeometricObject *go){
 		this->points.push_back( cp );
 	}
 
-	// cout << this->points.size() <<  " points registered. "<<endl;
-	Debug::log(string("Registering faces"));
+	debugger.log(string("Registering faces"), LOOP, "COLLISION");
 	
 	for( int i = 0; i < go->getFaces().size(); i++ ){
 		CFace cf;
@@ -64,13 +61,13 @@ void CollisionManager::registerObject(GeometricObject *go){
 		this->faces.push_back( cf );
 	}
 
-	// cout << this->faces.size() << " faces registered " << endl;
 	this->indexes[go] = objIdxs;
 	this->objects[go] = this->objects.size();
 }
 
 void CollisionManager::firstPass( int step ){
-	Debug::log(string("Finding collisions, first pass"), LOOP);
+	debugger.log(string("Finding collisions, first pass"), LOOP, "COLLISION");
+
 	for( int i = 0; i < this->points.size(); i++ ){
 		// Add hash
 		CPoint cp = this->points[i];
@@ -86,7 +83,7 @@ void CollisionManager::firstPass( int step ){
 }
 
 void CollisionManager::secondPass( int step ){
-	Debug::log(string("Finding collisions, second pass"), LOOP);
+	debugger.log(string("Finding collisions, second pass"), GENERAL, "COLLISION");
 
 	for( int i = 0; i < this->faces.size(); i++ ){		
 		CFace cf = this->faces[i];
@@ -117,7 +114,7 @@ void CollisionManager::evaluateContacts( CFace cf, int step ){
 }
 
 void CollisionManager::handleCollisions( CFace cf, CHashItem chi, int step ){
-	Debug::log(string("Handling collision"), LOOP);
+	debugger.log(string("Handling collision"), LOOP, "COLLISION");
 
 	for( list<int>::iterator it = chi.items.begin(); it != chi.items.end(); ++it ){
 
@@ -134,18 +131,12 @@ void CollisionManager::handleCollisions( CFace cf, CHashItem chi, int step ){
 void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
 	int i, j;
 
-	Debug::log(string("Storing collision"), LOOP);
+	debugger.log(string("Storing collision"), LOOP, "COLLISION");
 
 	Point *p = cp.point;
 	Edge e( p->pre, p );
 	vec pd = {ht.discretize(p->x(0)), ht.discretize(p->x(1)), ht.discretize(p->x(2))};
 	
-	// if( p->pre->x(1)*p->x(1) < 0 ){
-	// 	cout << "Pre:" <<printvec(p->pre->x) << ", pos: " << printvec(p->x) <<"Is penetrated: " << (cf.face->isPenetrated( e ) || 
-	// 	 cf.face->penetrates(p)) << ", Is inside: " <<
-	// 	 (cf.face->isInside(cf.face->getFaceProjection(e)))  <<endl;
-	// }
-
 	if( (cf.face->isPenetrated( e ) || 
 		 cf.face->penetrates(p)) && 
 		 cf.face->isInside(cf.face->getFaceProjection(e)) ){
@@ -159,17 +150,18 @@ void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
 		ci.goPoint = cp.go;
 		ci.goFace = cf.go;
 
-		Debug::log(string("Adding contact"), LOOP);
+		debugger.log(string("Adding contact"), LOOP, "COLLISION");
+		// Changing point state
+		cp.point->state = Invalid;
+		// Adding to the contact list
 		this->contacts->add( cp.go, cf.go, ci );
 	}
 }
 
 
 void CollisionManager::pruneContacts( ){
-	Debug::log(string("Prunning contacts"), LOOP);
-	for( Contact *c : contacts->getContacts() ){
-		c->prunePoints();
-	}	
+	// debugger.log(string("Prunning contacts"), LOOP, "COLLISION");
+	this->contacts->pruneContacts();
 }
 
 

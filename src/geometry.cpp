@@ -18,7 +18,6 @@ void GeometricTransform::map( vector<Point *>& points ){
 }
 
 vec GeometricTransform::mapVec( vec y ){
-	this->M.print();
 	vec x = {y(0), y(1), y(2), 1};
 	vec xp = this->M*x;
 	xp = {xp(0), xp(1), xp(2)};

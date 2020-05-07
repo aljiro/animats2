@@ -36,6 +36,7 @@ add_executable(animats ${SOURCES})
 target_link_libraries(animats
 	${ALL_LIBS}
 )
+
 target_link_libraries(animats openblas)
 target_link_libraries(animats lapack)
 
