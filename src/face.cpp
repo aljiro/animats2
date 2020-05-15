@@ -159,79 +159,273 @@ bool Face::penetrates( Point *p ){
 	return faceEdge; // Returning only the face-edge part of the test
 }
 
-vec Face::faceObjectCentroid( vector<Point *>& face_points ){
+vec Face::faceObjectCentroid( vector<Point *>& face_points, bool pre = false ){
 	vec vv = zeros<vec>(3);
+	vec x;
 
-	for( int i = 0; i <face_points.size(); i++ )
-		vv += face_points[i]->x;
+	for( int i = 0; i <face_points.size(); i++ ){
+		if( pre && face_points[i]->pre != NULL )
+			x = face_points[i]->pre->x;
+		else
+			x = face_points[i]->x;
+
+		vv += x;
+	}
 
 	vv /= face_points.size();
 	return vv;
 }
 
 double Face::getPenetrationDepth( Edge& e ){	
+	debugger.log("Computing penetration depth", LOOP, "FACE");
 
-	vec v = e.v1->x - e.v0->x;
-	// if( dot(v, this->normal) >= 0){
+	vec q = this->getFaceProjection( e );
+	vec p = e.v1->x;
 
-	// 	this->normal = -this->normal;
-	// }
-
-	vec n = this->normal;
-
-	vec f_cm = (this->points[0]->x +
-			   this->points[1]->x + 
-			   this->points[2]->x)/3.0;
-	vec a = e.v0->x - f_cm;
-	vec b = e.v1->x - f_cm;
-
-	double tp = -(dot(n, a))/(dot(n, b-a));
-	vec g = b*tp + a*(1-tp);
-	g += f_cm;
-	double d = norm( e.v1->x - g );
+	double d = norm(p - q);
 
 	return d ; 
 }
 
-vec Face::getFaceProjection( Edge& e ){
-	vec v = e.v1->x - e.v0->x;
-	// if( dot(v, this->normal) >= 0){
+void Face::sortVertices( vec x[] ){
+	debugger.log("Sorting vertices", LOOP, "FACE");
 
-	// 	this->normal = -this->normal;
-	// }
+	if( !ltvec(x[0], x[1]) )
+		swap( x, 0, 1 );
 
-	vec n = this->normal;
-	vec f_cm = (this->points[0]->x +
-			   this->points[1]->x + 
-			   this->points[2]->x)/3.0;
-	vec fp_cm;
+	if( !ltvec(x[1], x[2]) )
+		swap( x, 1, 2 );
 
-	if( this->points[0]->pre != NULL ){
-		fp_cm = (this->points[0]->pre->x +
-			   this->points[1]->pre->x + 
-			   this->points[2]->pre->x)/3.0;
-	}else
-		fp_cm = f_cm;
-
-	vec a = e.v0->x - f_cm;
-	vec b = e.v1->x - f_cm;
-	vec g;
-
-	if( norm(e.v1->x - e.v0->x) < 0.001 ){
-		g = b + f_cm;
-	}else{
-		double tp = -(dot(n, a))/(dot(n, b-a));
-		//tp = 0;
-		g = b*tp + a*(1-tp);
-		g += f_cm;
-	}
+	if( !ltvec( x[0], x[1]) )
+		swap( x, 0, 1 );
 
 	
-
-	return g; 
 }
 
-vec Face::getFaceProjection2( Edge& e ){
+void Face::computeBaseAreas( vec a, vec w, vec x[], double A[] ){
+	mat M(3,3);
+	vec v1, v2;
+
+	// Constructing the areas
+	for( int i = 0; i < 3; i++ ){
+		debugger.log("Computing A_" + to_string(i), LOOP, "FACE");
+		v1 = x[(i + 1)%3] - a;
+		v2 = x[(i + 2)%3] - a;
+		M(0, 0) = v1[0];
+		M(0, 1) = v1[1];
+		M(0, 2) = v1[2];
+		M(1, 0) = v2[0];
+		M(1, 1) = v2[1];
+		M(1, 2) = v2[2];
+		M(2, 0) = w[0];
+		M(2, 1) = w[1];
+		M(2, 2) = w[2];
+		A[i] = det(M)*0.5;
+	}
+}
+
+void Face::computeComplementaryArea( vec a, vec w, vec u, vec x[], double dW[] ){
+	mat W(3,3), U(3,3);
+	vec v1, v2;
+
+	// Constructing the areas
+	for( int i = 0; i < 3; i++ ){
+		debugger.log("Computing A_" + to_string(i), LOOP, "FACE");
+		v1 = x[(i + 1)%3] - a;
+		v2 = x[(i + 2)%3] - a;
+		// W
+		W(0, 0) = v1[0];
+		W(0, 1) = v1[1];
+		W(0, 2) = v1[2];
+		W(1, 0) = u[0];
+		W(1, 1) = u[1];
+		W(1, 2) = u[2];
+		W(2, 0) = w[0];
+		W(2, 1) = w[1];
+		W(2, 2) = w[2];
+		// U
+		U(0, 0) = u[0];
+		U(0, 1) = u[1];
+		U(0, 2) = u[2];
+		U(1, 0) = v2[0];
+		U(1, 1) = v2[1];
+		U(1, 2) = v2[2];
+		U(2, 0) = w[0];
+		U(2, 1) = w[1];
+		U(2, 2) = w[2];
+
+		dW[i] = (det(W) + det(U))*0.5;
+	}
+}
+
+void Face::computeAreas( vec a, vec w,  double A[] ){
+	debugger.log("Computing areas for penetration info", LOOP, "FACE");
+	
+
+	vec x[3] = {this->points[0]->x, 
+				this->points[1]->x,
+				this->points[2]->x};
+
+	sortVertices( x );
+
+	computeBaseAreas( a, w, x, A );
+	debugger.log("Finished computing areas", LOOP, "FACE");
+}
+
+bool Face::isCoplanar( vec v ){
+	double epsilon = 0.01;
+	double r = abs(dot(v, this->normal));
+
+	return r < epsilon;
+}
+
+vec Face::getPointOfProjection( vec x[], double A[] ){
+	vec q = zeros<vec>(3);
+	double sA = A[0] + A[1] + A[2];
+
+	for( int i = 0; i < 3; i++ )
+			q += (A[i]/sA)*x[i];				
+
+	return q;
+}
+
+vec Face::computeFaceProjection( vec a, vec w ) {
+	vec x[3] = {this->points[0]->x, 
+				this->points[1]->x,
+				this->points[2]->x};
+	
+	double A[3];
+	computeAreas( a, w, A );
+	// Applying the condition
+	debugger.log("Areas: " + to_string(A[0]) + ", " + 
+		          to_string(A[1]) + ", " + to_string(A[2]), LOOP, "FACE");
+
+	if( ((A[0]*A[1]) > 0) && ((A[0]*A[2]) > 0) ){
+		// Computing the point
+		return getPointOfProjection( x, A );
+	}else{
+
+		cout << "Ups, the projection is not inside the face" << endl;
+
+		cout << "q: " << printvec(getPointOfProjection( x, A )) << endl;
+		cout << "a: " << printvec(a) << endl;
+		cout << "w: " << printvec(w) << endl;
+		for(int i = 0; i<3; i++ )cout << "x" << i << ": " << printvec(x[i]) << endl;
+		
+		throw FaceException();
+		//return e.v0->x;
+	}
+	
+}
+
+vec Face::tracePointOfContact( Edge& e, vec w, vec u ) {
+	// Finds the first point at which the projection falls in the triangle
+	// w and u are not unit vectors
+
+	// Validate that they are in the correct side of the hyperplane
+	
+	int N = 50;
+	double tau = 0;
+	double h = 1/N;
+	double d;
+	
+	// Point
+	vec p0 = e.v0->x;
+	// face
+	vec x0[3] = {this->points[0]->pre->x, 
+				this->points[1]->pre->x,
+				this->points[2]->pre->x};
+
+	vec x[3];
+	vec p;
+	double t_p = -1;
+
+	for( int i = 0; i < N; i++ ){
+		// move the points
+		for( int j = 0; j < 3; j++ )
+			x[j] = x0[j] + u*tau;
+
+		p = p0 + w*tau;
+		// compute the distance to the triangle
+		d = pointTriangleSignedDistance( p, x );
+		// break if close enough
+		if( d < 0.05 ){
+			t_p = tau;
+			break;
+		}
+
+
+		tau += h;
+	}
+
+	if( t_p == -1 )
+		throw FaceException();
+
+	// Project the point found into the triangle
+	vec pp = computeProjectionOnTriangle( p, x );
+	// translate to the original position of the triangle
+	pp += u*(1 - t_p);
+
+	return pp;
+	
+}
+
+vec Face::getFaceProjection( Edge& e ){
+	debugger.log("Computing face projection point", LOOP, "FACE");
+	double A[3];
+	double sA;
+	vec a = e.v0->x;
+	vec q = zeros<vec>(3);
+
+	vec x[3] = {this->points[0]->x, 
+				this->points[1]->x,
+				this->points[2]->x};
+
+	// Determine whether to use the point vector or the face one
+	// Computing the direction vector for the point
+	vec w = e.v1->x - e.v0->x;
+
+	// Computing the direction vector for the CoM of the face
+	vec cm = faceObjectCentroid( this->points );
+	vec cm_pre = faceObjectCentroid( this->points, true );
+	vec u = cm - cm_pre;
+	cout << "The norm of the movement of the face: " << norm(u) << endl;
+	// If both are active, trace the projection matrices until contact
+	try{
+		if( norm(w) <= 0.01 && norm(u) > 0 ){
+			debugger.log("Choosing the face vector to project", LOOP, "FACE");
+			// Do it using w
+		
+			// cin.get();
+			return computeFaceProjection( a, unitVec(u) );
+		}else {//if( norm(u) <= 0.01 ){
+			// Do it using u
+			debugger.log("Choosing the vertex vector to project", LOOP, "FACE");
+			// return computeFaceProjection( a, unitVec(w) );
+			return computeProjectionOnTriangle( a, x );
+		}// }else{
+			// debugger.log("Tracing the point: The face and the point are moving", LOOP, "FACE");
+		// 	cin.get();
+			// return tracePointOfContact( e, w, u );		
+		// }
+	}catch(std::exception& ex){
+		cout << "Catched exception" << endl;
+		throw FaceException();
+	}
+}
+
+bool Face::isInsideProjection( Edge& e ){
+	debugger.log("Checking if the projection is inside", LOOP, "FACE");
+	try{
+		vec q = getFaceProjection( e );
+		return true;
+	}catch( std::exception& e ){
+		return false;
+	}
+
+}
+
+vec Face::getFaceOrthogonalProjection( Edge& e ){
 	if( this->recompute ){
 		this->computeNormal();
 	}
@@ -247,7 +441,7 @@ vec Face::getFaceProjection2( Edge& e ){
 
 
  // Old penetration depth
-double Face::getPenetrationDepth2( Edge& e ){
+double Face::getOrthogonalPenetrationDepth( Edge& e ){
 
 	if( this->recompute ){
 		this->computeNormal();

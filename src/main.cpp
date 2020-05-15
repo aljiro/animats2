@@ -6,6 +6,7 @@
 #include "../include/simulation.h"
 #include "../include/simview.h"
 #include "../include/report.h"
+#include "../include/contactview.h"
 #include "time.h"
 
 using namespace morph::animats;
@@ -53,6 +54,7 @@ int main( int argc, char** args ){
 	Simulation *s = Simulation::load( args[1] );
 	GravityForce *gf = new GravityForce(NULL);
 	s->addForce( gf );
+	//s->addView( new ContactView( *s ) );
 	//s->addView( new ReportView(*s, ReportView::DUMP_POINTS | 
 	//							   ReportView::DUMP_CONTACTS) );
 	s->reset();

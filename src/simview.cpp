@@ -64,10 +64,13 @@ int SimView::init(){
     }
 
     glfwSetInputMode(this->window, GLFW_STICKY_KEYS, GL_TRUE);
-    glClearColor(0.0f, 0.3f, 0.4f, 0.0f);
+    
     glEnable( GL_DEBUG_OUTPUT );
     glDebugMessageCallback( MessageCallback, 0 );
+    glClearColor(0.0,0.0,0.0,0.0);
+    glClearColor(0.0f, 0.3f, 0.4f, 0.0f);
 
+ 
     return 0;
 
 }
@@ -88,9 +91,7 @@ void SimView::createBuffer( GeometricObject *go ){
 
 	glGenVertexArrays( 1, &(go->VAO) );
 	glBindVertexArray( go->VAO );	
-	cout << "VAO: " << go->VAO <<endl;
 	glGenBuffers( 1, &(go->VBO) );	
-	cout << "VBO: " << go->VBO <<endl;
 	glBindBuffer( GL_ARRAY_BUFFER, go->VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(shape), shape, GL_STATIC_DRAW );
 	glEnableVertexAttribArray( 0 );
@@ -235,6 +236,7 @@ void SimView::collectObjectShape( GeometricObject *go, GLfloat *shape, GLfloat *
 
 void SimView::drawObject( GeometricObject *go , int colorId){
 	
+	
 	if( !go->isVisible() )
 		return;
 
@@ -309,6 +311,13 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	);
 
 	GLfloat color_soft[4] = {0.5f, 0.1f, 0.0f, 1.0f}; // Set according to heat
+
+	if( go->getId() == 2 ){
+		color_soft[0] = 0.0f;
+		color_soft[2] = 0.5f;
+		color_soft[3] = 0.0f;
+	}
+
 	GLfloat color_hard[4] = {0.5f, 0.5f, 0.5f, 1.0f}; // Set according to heat
 	
 	//glUseProgram( this->shaderId );
@@ -353,7 +362,7 @@ void SimView::draw( Simulation& s ){
 	debugger.log(string("Drawing objects: setting up"), LOOP, "SIMVIEW");
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glBlendFunc( GL_SRC_ALPHA, GL_ONE );
+	// glBlendFunc( GL_SRC_ALPHA, GL_ONE );
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	// Drawing rigid bodies first

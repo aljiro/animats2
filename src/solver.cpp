@@ -17,7 +17,7 @@ void Solver::step( Simulation& s ){
 	for( SoftBody *go : s.getSoftBodies() ){
 		this->integrateSoftBody( go );
 	}
-	
+
 	this->t += h;
 	// Move Rigid bodies
 	// TO-DO
@@ -30,7 +30,7 @@ void Solver::integrateSoftBody( SoftBody *go ){
 	double alpha_c = 1.0;
 	double m;	
 	vec vc;
-	double c = 0.1; // Friction of the elastic springs
+	double c = 0.05; // Friction of the elastic springs
 	Point *p;
 
 	for( int i = 0; i < points.size(); i++ ){
@@ -46,13 +46,10 @@ void Solver::integrateSoftBody( SoftBody *go ){
 			p->pre = new Point(*(p));
 		
 		if( p->state == Invalid )
-			vc = alpha_c*(x - p->xc)/h;
-		else
-			vc = -h*f/m;
+			vc = alpha_c*(x - p->xc)/h;		
 		
-		p->v += -alpha*( x - g )/h 
-				 - vc -c*p->v;
-
+		p->v +=  -alpha*( x - g )/h +
+				 h*f/m -c*p->v - vc ;
 		p->x += h*p->v;		
 	}
 

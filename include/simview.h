@@ -29,7 +29,7 @@ typedef struct{
 } CameraParams; 
 
 class SimView : public View{
-private:
+protected:
 	GLFWwindow* window;
 	GLuint shaderId;
 	// Uniform identifiers

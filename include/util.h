@@ -87,6 +87,60 @@ inline vec computeCenterOfMass( const std::vector<Point *>& points ){
     return cg;
 }
 
+inline vec unitVec( vec u ){
+	double nn = norm( u );
+	return nn == 0 ? u : u/nn;
+}
+
+inline vec computeNormal( vec x[] ){
+// Assumes 3 vertices of a triangle in the array
+	vec n = cross( x[1] - x[0], x[2] - x[0] );
+	return n;
+}
+
+inline double anglePointVertex( vec p, vec x[] ){
+	vec n = computeNormal( x );
+	vec pp0 = p - x[0];
+	double cosa = dot(pp0, n)/(norm(pp0)*norm(n));
+	return cosa;
+}
+
+inline double pointTriangleSignedDistance( vec p, vec x[] ){
+	double cosa = anglePointVertex( p, x );
+	vec pp0 = p - x[0];
+	double d = norm(pp0)*cosa;
+	return d;
+}
+
+inline vec computeProjectionOnTriangle( vec p, vec x[] ){
+	vec n = computeNormal( x );
+
+	if( dot(n, p-x[0]) < 0 )
+		n = -n;
+
+	double d = pointTriangleSignedDistance( p, x );
+	vec pp0 = -d*n/norm(n);
+	vec p0 = p + pp0;
+	return p0;
+}
+
+inline bool ltvec( vec a, vec b ){
+	if( a(0) <= b(0)) 
+		return true;
+	if (a(1) <= b(1))
+		return true;
+	if (a(2) <= b(2))
+		return true;
+	
+	return false;
+} 
+
+inline void swap( vec x[], int i, int j ){
+	vec tmp = x[j];
+	x[j] = x[i];
+	x[i] = tmp;
+}
+
 
 
 // Transformations 

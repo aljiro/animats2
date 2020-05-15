@@ -80,7 +80,7 @@ void Simulation::togglePause(){
 
 void Simulation::run( int maxSteps ){
 	debugger.log(string("Running the simulation"), GENERAL, "SIMULATION");
-	Solver solver;
+	Solver solver(0.01);
 	this->running = true;
 
 	while( this->running ){

@@ -65,10 +65,13 @@ class DeformableContact: public Contact{
 	double delta;
 	Face *sepPlane;
 	bool react;
+	bool prune( int collection );
+	void resolve( int collection );
 public:
 	DeformableContact( SoftBody *A, SoftBody *B);
 	void addCollision( CollisionInformation ci );
 	void resolve();
+	
 	bool prune();
 };
 

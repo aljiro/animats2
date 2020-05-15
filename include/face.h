@@ -9,6 +9,7 @@ A face is a topological object.
 #include <iostream>
 #include <vector>
 #include <armadillo>
+#include <exception>
 
 #include "point.h"
 #include "edge.h"
@@ -19,11 +20,25 @@ using namespace arma;
 
 namespace morph{ namespace animats{
 
+class FaceException : public exception{
+
+	virtual const char* what() const throw(){
+		return "An error happened in the face";
+	}
+};
 
 class Face{
 
 private:
 	mat C;
+
+	void sortVertices( vec x[] );
+	void computeAreas( vec a, vec w, double A[] );
+	vec computeFaceProjection( vec a, vec w ) ;
+	vec tracePointOfContact( Edge& e, vec w, vec u ) ;
+	void computeBaseAreas( vec a, vec w, vec x[], double A[] );
+	void computeComplementaryArea( vec a, vec w, vec u, vec x[], double dW[] );
+	vec getPointOfProjection( vec x[], double A[] );
 
 public:
 	vector<Edge> edges; // edges sorted counter-clockwise
@@ -63,19 +78,20 @@ public:
 		Checks the predicates for face piercing.
 	*/
 	bool isPenetrated( const Edge&  e );
-
 	bool penetrates( Point *p );
 
-	vec faceObjectCentroid( vector<Point *>& face_points );
+	vec faceObjectCentroid( vector<Point *>& face_points, bool pre );
 	double getPenetrationDepth( Edge& e );
-	double getPenetrationDepth2( Edge& e );
-	vec getFaceProjection( Edge& e );
-	vec getFaceProjection2( Edge& e );
+	double getOrthogonalPenetrationDepth( Edge& e );
+	vec getFaceProjection( Edge& e ) ;
+	vec getFaceOrthogonalProjection( Edge& e );
 	// Pointing outwards
 	void fixNormalOrientation( vector<Point *>& face_points );
 
 	vec getCentroid();
 	bool isInside( vec pos );
+	bool isInsideProjection( Edge& e );
+	bool isCoplanar( vec v );
 	void addEdge( int i, int j );
 	void setIndexes( int i1, int i2, int i3 );
 

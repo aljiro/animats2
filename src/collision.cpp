@@ -139,7 +139,7 @@ void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
 	
 	if( (cf.face->isPenetrated( e ) || 
 		 cf.face->penetrates(p)) && 
-		 cf.face->isInside(cf.face->getFaceProjection(e)) ){
+		 cf.face->isInsideProjection(e) ){
 	// Point p penetrates the face cf.face
 		i = this->objects[ cp.go ];
 		j = this->objects[ cf.go ];

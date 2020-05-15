@@ -53,11 +53,15 @@ void ContactList::add( GeometricObject *A, GeometricObject *B, CollisionInformat
 }
 
 void ContactList::pruneContacts(){
+	vector<Contact *> nContacts;
+
 	for( vector<Contact *>::iterator it = contacts.begin(); 
 		it != contacts.end(); ++it ){
-		if( (*it)->prune() )
-			contacts.erase( it );
+		if( !(*it)->prune() )
+			nContacts.push_back( (*it) );
 	}
+
+	contacts = nContacts;
 }
 
 void ContactList::clear(){
@@ -107,7 +111,14 @@ void SignoriniContact::resolve(){
 		Point *p = (*it).point; // Point at which the collition is hapenning
 		Face *f = (*it).face;
 		Edge e( p->pre, p );
-		p->xc = f->getFaceProjection( e );
+		
+		if( f->isInsideProjection(e) )
+			p->xc = f->getFaceProjection( e );
+		// else
+		// 	p->xc = p->x;
+
+		p->v = zeros<vec>(3);
+		
 		//pu = f->getPenetrationDepth( e );
 		// Adding reaction
 
@@ -116,22 +127,22 @@ void SignoriniContact::resolve(){
 }
 
 bool SignoriniContact::prune(){
-	vector<vector<CollisionInformation>::iterator> toDel;
+	vector<int> toDel;
+	vector<CollisionInformation> newCollisions;
 
-	for( vector<CollisionInformation>::iterator it = collisions.begin(); 
-		it != collisions.end(); ++it ){
-		Point *p = (*it).point; // Point at which the collition is hapenning
-		Face *f = (*it).face;
+	for( int i = 0; i < collisions.size(); i++ ){
+		CollisionInformation ci = collisions[i];
+		Point *p = ci.point; // Point at which the collition is hapenning
+		Face *f = ci.face;
 		Edge e( p->pre, p );
 
 		if( !f->isPenetrated( e ) ){
 			p->state = Free;
-			toDel.push_back(it);
-		}
+		}else
+			newCollisions.push_back(ci);
 	}
 
-	for( vector<CollisionInformation>::iterator it : toDel )
-		collisions.erase(it);
+	collisions = newCollisions;
 
 	return collisions.empty();	
 }
@@ -166,67 +177,59 @@ void DeformableContact::addCollision( CollisionInformation ci ){
 	this->react = false;
 }
 
+bool DeformableContact::prune( int collection ){
+	vector<int> toDel;
+	vector<CollisionInformation> newCollisions;
+	int n = collection == 0? collisionsA.size() : collisionsB.size();
+
+	for( int i = 0; i < n; i++ ){
+		CollisionInformation ci = collection == 0? collisionsA[i] : collisionsB[i];
+		Point *p = ci.point; // Point at which the collition is hapenning
+		Face *f = ci.face;
+		Edge e( p->pre, p );
+
+		if( !f->isPenetrated( e ) ){
+			p->state = Free;
+		}else
+			newCollisions.push_back(ci);
+	}
+
+	if( collection == 0 )
+		collisionsA = newCollisions;
+	else
+		collisionsB = newCollisions;
+
+	return newCollisions.empty();	
+	// return (collection == 0? collisionsA:collisionsB).empty();
+}
+
 bool DeformableContact::prune(){
-	vector<vector<CollisionInformation>::iterator> toDelA,toDelB;
-
-	for( vector<CollisionInformation>::iterator it = collisionsA.begin(); 
-		it != collisionsA.end(); ++it ){
-		Point *p = (*it).point; // Point at which the collition is hapenning
-		Face *f = (*it).face;
-		Edge e( p->pre, p );
-
-		if( !f->isPenetrated( e ) ){
-			p->state = Free;
-			toDelA.push_back(it);
-		}
-	}
-
-	for( vector<CollisionInformation>::iterator it = collisionsB.begin(); 
-		it != collisionsB.end(); ++it ){
-		Point *p = (*it).point; // Point at which the collition is hapenning
-		Face *f = (*it).face;
-		Edge e( p->pre, p );
-
-		if( !f->isPenetrated( e ) ){
-			p->state = Free;
-			toDelB.push_back(it);
-		}
-	}
-
-	for( vector<CollisionInformation>::iterator it : toDelA )
-		collisionsA.erase(it);
-
-	for( vector<CollisionInformation>::iterator it : toDelB )
-		collisionsB.erase(it);
-
-	return collisionsA.empty() and collisionsB.empty();
+	return this->prune(0) and this->prune(1);
 }
 
 
+void DeformableContact::resolve( int collection ){
+
+	for( vector<CollisionInformation>::iterator it = (collection == 0 ? collisionsA:collisionsB).begin(); 
+		it != (collection == 0 ? collisionsA:collisionsB).end(); ++it ){
+		Point *p = (*it).point; // Point at which the collition is hapenning
+		Face *f = (*it).face;
+		Edge e( p->pre, p );
+		debugger.log("Resolving contact", LOOP, "CONTACT");
+		
+		if( f->isInsideProjection(e) )
+			p->xc = f->getFaceProjection( e );
+		// else
+		// 	p->xc = p->pre->x;
+
+		p->v = zeros<vec>(3);
+	}
+
+}
+
 void DeformableContact::resolve(){
-	for( vector<CollisionInformation>::iterator it = collisionsA.begin(); 
-		it != collisionsA.end(); ++it ){
-		Point *p = (*it).point; // Point at which the collition is hapenning
-		Face *f = (*it).face;
-		Edge e( p->pre, p );
-		p->xc = f->getFaceProjection2( e );
-		//pu = f->getPenetrationDepth( e );
-		// Adding reaction
-
-		// p->fc = epsilon*pu*f->normal;
-	}
-
-	for( vector<CollisionInformation>::iterator it = collisionsB.begin(); 
-		it != collisionsB.end(); ++it ){
-		Point *p = (*it).point; // Point at which the collition is hapenning
-		Face *f = (*it).face;
-		Edge e( p->pre, p );
-		p->xc = f->getFaceProjection2( e );
-		//pu = f->getPenetrationDepth( e );
-		// Adding reaction
-
-		// p->fc = epsilon*pu*f->normal;
-	}
+	resolve( 0 );
+	resolve( 1 );
 }
 
 
