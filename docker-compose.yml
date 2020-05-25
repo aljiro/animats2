@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  app:
+    build:
+        context: .
+        args:
+          EXPERIMENT: ../examples/simple_experiment/
+          RECONFIGURE: "true"
+          DEBUG: "false"
+          DEBUG_LOOPS: "false"
+          DEBUG_ORIGIN: all
+    volumes:
+    - .:/code
