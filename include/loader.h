@@ -4,6 +4,7 @@
 #include "simulation.h"
 #include "util.h"
 #include "simview.h"
+#include "video.h"
 
 #include <vector>
 #include <iostream>

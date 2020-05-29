@@ -8,6 +8,7 @@ find_package(glm REQUIRED)
 find_package(glew REQUIRED)
 find_package(glew REQUIRED)
 find_package(Armadillo REQUIRED)
+find_package(OpenCV REQUIRED)
 
 include_directories(
 	${GLFW_INCLUDE}
@@ -23,6 +24,7 @@ set(ALL_LIBS
 	${GLM_LIBRARY}
 	GLEW
 	armadillo
+	${OpenCV_LIBS}
 )
 
 add_subdirectory(test)

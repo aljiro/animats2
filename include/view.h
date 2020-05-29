@@ -2,7 +2,6 @@
 #define VIEW_H
 
 #include <iostream>
-#include "simulation.h"
 
 namespace morph{ namespace animats{
 
@@ -13,8 +12,9 @@ class View{
 public:
 	virtual void notify( Simulation& s, std::string message ) = 0;
 	virtual void setup( Simulation& s ) = 0;
+	void notifyEnd(){}
 };
 
 }}
 
-#endif
+#endif // VIEW_H

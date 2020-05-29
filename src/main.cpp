@@ -6,7 +6,6 @@
 #include "../include/simulation.h"
 #include "../include/simview.h"
 #include "../include/report.h"
-#include "../include/contactview.h"
 #include "time.h"
 
 using namespace morph::animats;

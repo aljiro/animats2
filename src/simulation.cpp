@@ -96,6 +96,8 @@ void Simulation::run( int maxSteps ){
 		if( maxSteps > 0 && this->step > maxSteps )
 			this->running = false;
 	}
+
+	this->notifyEnd();
 }
 
 RigidBody* Simulation::addRigidBody( int id, string type ){
@@ -152,9 +154,17 @@ void Simulation::addView( View *view ){
 }
 
 
+
+
 void Simulation::notifyViews( string msg){
 	for( View *view : this->views ){
 		view->notify( *this, msg );
+	}
+}
+
+void Simulation::notifyEnd(){
+	for( View *view : this->views ){
+		view->notifyEnd();
 	}
 }
 

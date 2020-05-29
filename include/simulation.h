@@ -11,7 +11,6 @@
 #include "contact.h"
 #include "loader.h"
 #include "force.h"
-#include "view.h"
 
 using namespace std;
 
@@ -32,8 +31,7 @@ private:
 	vector<View *> views;	
 
 	// State variables
-	bool running;
-	
+	bool running;	
 	unsigned int step;
 	string workingDir;
 
@@ -52,6 +50,7 @@ public:
 	void addView( View *view );
 	// Notifies the listening views of the opdate
 	void notifyViews( string msg );
+	void notifyEnd();
 	void reset();
 	// Adds force to the force chain
 	void addForce( ForceObject *fo );

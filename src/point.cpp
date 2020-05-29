@@ -15,6 +15,9 @@ Point::Point( vec x, float m, vec color ):x(x),
 
 }
 
+Point::Point( double x1, double x2, double x3 ):Point( vec{x1,x2,x3}){
+}
+
 Point::Point( const Point& p ){
 	this->color = vec(p.color);
 	this->x = vec(p.x);

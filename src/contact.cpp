@@ -113,7 +113,7 @@ void SignoriniContact::resolve(){
 		Edge e( p->pre, p );
 		
 		if( f->isInsideProjection(e) )
-			p->xc = f->getFaceProjection( e );
+			p->xc = p->pre->x;//f->getFaceProjection( e );
 		// else
 		// 	p->xc = p->x;
 
@@ -188,9 +188,9 @@ bool DeformableContact::prune( int collection ){
 		Face *f = ci.face;
 		Edge e( p->pre, p );
 
-		if( !f->isPenetrated( e ) ){
-			p->state = Free;
-		}else
+		// if( !f->isPenetrated( e ) || e.length() < 0.01 ){
+		// 	p->state = Free;
+		// }else
 			newCollisions.push_back(ci);
 	}
 
@@ -216,14 +216,18 @@ void DeformableContact::resolve( int collection ){
 		Face *f = (*it).face;
 		Edge e( p->pre, p );
 		debugger.log("Resolving contact", LOOP, "CONTACT");
-		
-		if( f->isInsideProjection(e) )
-			p->xc = f->getFaceProjection( e );
+		cout << "Contact details: " << endl;
+		cout << "Face: " <<  printvec(f->points[0]->x) << ": " << 
+		        printvec(f->points[1]->x) << ":" << printvec(f->points[2]->x) << endl;
+		cout << "Point: pre: " << printvec(p->pre->x) << ", p: " << printvec(p->x) << endl;
+		// if( f->isInsideProjection(e) )
+			// p->xc = f->getFaceProjection( e );
 		// else
-		// 	p->xc = p->pre->x;
+			p->xc = p->pre->x;
 
 		p->v = zeros<vec>(3);
 	}
+	// cin.get();
 
 }
 

@@ -25,6 +25,10 @@ Face::Face( const Face& p ){
 	this->init( p.points[0], p.points[1], p.points[2] );
 }
 
+Face::~Face(){
+	// Destroy everything
+}
+
 void Face::setIndexes( int i1, int i2, int i3 ){
 	this->indexes.push_back(i1);
 	this->indexes.push_back(i2);
@@ -53,8 +57,7 @@ void Face::computeNormal( ){
 	this->normal = cross( u1, u2 );	
 	double n = norm(this->normal);
 
-	this->normal /= n==0?1:norm(this->normal);
-	
+	this->normal /= n==0?1:norm(this->normal);	
 }
 
 /* 
@@ -74,7 +77,6 @@ bool Face::A( Point& face_point, vec edge_vector ){
 	Predicate type B. Requires:
 	1. An edge in the face with extremes vn, vm
 	2. An edge of the incident object with extremes vl, vk
-
 	
 */
 bool Face::B( Point& vn, Point& vm, Point& vl, Point& vk ){
@@ -197,9 +199,7 @@ void Face::sortVertices( vec x[] ){
 		swap( x, 1, 2 );
 
 	if( !ltvec( x[0], x[1]) )
-		swap( x, 0, 1 );
-
-	
+		swap( x, 0, 1 );	
 }
 
 void Face::computeBaseAreas( vec a, vec w, vec x[], double A[] ){
@@ -300,21 +300,21 @@ vec Face::computeFaceProjection( vec a, vec w ) {
 	debugger.log("Areas: " + to_string(A[0]) + ", " + 
 		          to_string(A[1]) + ", " + to_string(A[2]), LOOP, "FACE");
 
-	if( ((A[0]*A[1]) > 0) && ((A[0]*A[2]) > 0) ){
+	// if( ((A[0]*A[1]) > 0) && ((A[0]*A[2]) > 0) ){
 		// Computing the point
-		return getPointOfProjection( x, A );
-	}else{
+	return getPointOfProjection( x, A );
+	// }else{
 
-		cout << "Ups, the projection is not inside the face" << endl;
+	// 	cout << "Ups, the projection is not inside the face" << endl;
 
-		cout << "q: " << printvec(getPointOfProjection( x, A )) << endl;
-		cout << "a: " << printvec(a) << endl;
-		cout << "w: " << printvec(w) << endl;
-		for(int i = 0; i<3; i++ )cout << "x" << i << ": " << printvec(x[i]) << endl;
+	// 	cout << "q: " << printvec(getPointOfProjection( x, A )) << endl;
+	// 	cout << "a: " << printvec(a) << endl;
+	// 	cout << "w: " << printvec(w) << endl;
+	// 	for(int i = 0; i<3; i++ )cout << "x" << i << ": " << printvec(x[i]) << endl;
 		
-		throw FaceException();
-		//return e.v0->x;
-	}
+	// 	throw FaceException();
+	// 	//return e.v0->x;
+	// }
 	
 }
 
@@ -394,19 +394,18 @@ vec Face::getFaceProjection( Edge& e ){
 	try{
 		if( norm(w) <= 0.01 && norm(u) > 0 ){
 			debugger.log("Choosing the face vector to project", LOOP, "FACE");
-			// Do it using w
-		
+			// Do it using w		
 			// cin.get();
 			return computeFaceProjection( a, unitVec(u) );
-		}else {//if( norm(u) <= 0.01 ){
+		}else{ // if( norm(u) <= 0.01 ){
 			// Do it using u
 			debugger.log("Choosing the vertex vector to project", LOOP, "FACE");
-			// return computeFaceProjection( a, unitVec(w) );
-			return computeProjectionOnTriangle( a, x );
+			return computeFaceProjection( a, unitVec(w) );
+			// return computeProjectionOnTriangle( a, x );
 		}// }else{
 			// debugger.log("Tracing the point: The face and the point are moving", LOOP, "FACE");
 		// 	cin.get();
-			// return tracePointOfContact( e, w, u );		
+		// 	return tracePointOfContact( e, w, u );		
 		// }
 	}catch(std::exception& ex){
 		cout << "Catched exception" << endl;
@@ -418,7 +417,7 @@ bool Face::isInsideProjection( Edge& e ){
 	debugger.log("Checking if the projection is inside", LOOP, "FACE");
 	try{
 		vec q = getFaceProjection( e );
-		return true;
+		return isInside(q);
 	}catch( std::exception& e ){
 		return false;
 	}

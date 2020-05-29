@@ -17,7 +17,7 @@
 	<animat id="2" visible="true">
 		<scale>(0.3,0.3,0.3)</scale>
 		<position>(0.3,0.7,0.1)</position>
-		<softness>0.9</softness>
+		<softness>0.2</softness>
 	</animat>
 
 </experiment>

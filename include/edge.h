@@ -14,6 +14,7 @@ public:
 	Point* v1;
 
 	Edge( Point* v0, Point* v1 );
+	double length();
 	Point* getHead();
 };
 

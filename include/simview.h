@@ -11,6 +11,7 @@
 #include "shader.hpp"
 #include "view.h"
 #include "gobject.h"
+#include "simulation.h"
 
 using namespace std;
 
@@ -45,7 +46,6 @@ protected:
 	glm::mat4 M;
 	glm::mat4 V;
 	glm::mat4 P;
-	int width, height;
 	float lightPower;
 	GLfloat *lightColor;
 	GLfloat *lightPosition;
@@ -53,6 +53,7 @@ protected:
 	CameraParams cParams;
 
 public:
+	int width, height;
 	SimView( Simulation& s );
 	int init();
 	void setup( Simulation& s );
