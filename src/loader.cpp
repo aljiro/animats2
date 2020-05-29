@@ -83,17 +83,21 @@ void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 void XMLLoader::addView( Simulation *s, XMLNode * node ){
 	debugger.log(string("Initializing the view to be added"), GENERAL, "LOADER");
 	SimView *sview = new SimView( *s );
-	VideoRecorder *vr = new VideoRecorder(sview);
+	bool v = node->ToElement()->BoolAttribute("video");	
 	XMLElement* element =  node->ToElement();	
 	vec p = ep.parseVector( element->GetText() );
 	sview->setViewPort(p);
 	s->addView( sview );
-	s->addView( vr );
+
+	if( v ){
+		VideoRecorder *vr = new VideoRecorder(sview);
+		s->addView( vr );
+	}
+	
 }
 
 void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
-	
-	
+		
 	XMLNode *it = node->FirstChild();	
 	int id = node->ToElement()->IntAttribute("id");
 	int rate = node->ToElement()->IntAttribute("rate");
