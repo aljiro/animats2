@@ -259,7 +259,7 @@ bool DeformableContact::isContactRegionValid(){
 		Face *f = ci.face;
 		Edge e( p->pre, p );
 
-		if( f->getPenetrationDepth2(e) > 0.01 ){
+		if( f->getPenetrationDepth(e) > 0.01 ){
 			
 			valid = false;
 			break;
@@ -463,7 +463,7 @@ void DeformableContact::pruneCollisionList( vector<CollisionInformation>& collis
 			this->react = false;
 		
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if( f->getPenetrationDepth2(e) > 0.01 || ( acc >= 0.01) ){
+		if( f->getPenetrationDepth(e) > 0.01 || ( acc >= 0.01) ){
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			cout << "Prunning: " << acc << endl;
 			 //cin.get();

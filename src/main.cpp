@@ -23,8 +23,8 @@ int main( int argc, char** args ){
 	Simulation *s = Simulation::load( args[1] );
 	GravityForce *gf = new GravityForce(NULL);
 	s->addForce( gf );
-	s->addView( new ReportView(*s, ReportView::DUMP_POINTS | 
-								   ReportView::DUMP_CONTACTS) );
+	// s->addView( new ReportView(*s, ReportView::DUMP_POINTS | 
+								//    ReportView::DUMP_CONTACTS) );
 	s->reset();
 	s->run( -1 );
 }
