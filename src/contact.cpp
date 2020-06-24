@@ -218,9 +218,9 @@ void DeformableContact::resolve( int collection ){
 		debugger.log("Resolving contact", LOOP, "CONTACT");
 		
 		if( f->isInsideProjection(e) )
-			p->xc = f->getFaceProjection( e );
+			// p->xc = f->getFaceProjection( e );
 		// else
-		// 	p->xc = p->pre->x;
+			p->xc = p->pre->x;
 
 		p->v = zeros<vec>(3);
 	}
