@@ -13,7 +13,7 @@ include_directories(
 	${GLM_INCLUDE}
 	${INCLUDE_INCLUDE}
 	${ARMADILLO_INCLUDE_DIR}
-	"${PROJECT_SOURCE_DIR}/include"
+	
 )
 
 set(ALL_LIBS
@@ -27,10 +27,24 @@ set(ALL_LIBS
 add_subdirectory(test)
 
 file(GLOB SOURCES
-    src/*.cpp
+    src/main.cpp
+	src/geometry/*.cpp
+	src/geometry/*.h
+	src/core/*.cpp
+	src/core/*.h
+	src/collision/*.cpp
+	src/collision/*.h
+	src/views/*.cpp
+	src/views/*.h
+	src/utilities/*.cpp
+	src/utilities/*.h
+	src/views/*.hpp
 )
 
 add_executable(animats ${SOURCES})
+target_include_directories(animats PRIVATE
+	"${PROJECT_SOURCE_DIR}/src/"
+)
 
 target_link_libraries(animats
 	${ALL_LIBS}

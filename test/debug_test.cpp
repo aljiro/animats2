@@ -1,4 +1,4 @@
-#include "util.h"
+#include "../src/utilities/util.h"
 
 using namespace morph::animats;
 

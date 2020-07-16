@@ -1,6 +1,6 @@
-#include "point.h"
-#include "face.h"
-#include "edge.h"
+#include "../src/geometry/point.h"
+#include "../src/geometry/face.h"
+#include "../src/geometry/edge.h"
 
 #include <armadillo>
 
