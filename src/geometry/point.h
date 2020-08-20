@@ -18,7 +18,8 @@ private:
 public:
 	vec x;
 	vec v;
-	vec xc; // Reaction
+	vec xc;
+	vec vc;
 	vec g; // Goal point
 	float m;
 	vec f;

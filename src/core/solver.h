@@ -22,7 +22,8 @@ private:
 public:
 	explicit Solver( double h = 0.01 );
 	// Produces one step of the simulation
-	void step( Simulation& s );	
+	void stepMaterials( Simulation& s );	
+	void stepCollisions( Simulation& s );
 };
 
 }}

@@ -7,7 +7,7 @@ Solver::Solver( double h ):h(h), t(0.0){
 
 }
 
-void Solver::step( Simulation& s ){
+void Solver::stepMaterial( Simulation& s ){
 	this->computeGoals( s );
 	// External forces and reactions based upon the goals
 	debugger.log(string("Computing external forces"), LOOP, "SOLVER" );
@@ -16,9 +16,7 @@ void Solver::step( Simulation& s ){
 	// Integrate equations of motion
 	for( SoftBody *go : s.getSoftBodies() ){
 		this->integrateSoftBody( go );
-	}
-
-	this->t += h;
+	}	
 	// Move Rigid bodies
 	// TO-DO
 }
@@ -28,31 +26,28 @@ void Solver::integrateSoftBody( SoftBody *go ){
 	vector<Point *> points = go->getPoints();	
 	double alpha = go->getShape()->getAlpha();
 	double alpha_c = 1.0;
-	double m;	
-	vec vc;
-	double c = 0.05; // Friction of the elastic springs
+	double m;
 	Point *p;
 
 	for( int i = 0; i < points.size(); i++ ){
 		p = points[i];
-		vec x = p->x;
-		vec g = p->g;
-		vec f = p->f;
-		// vec fc = p->fc;
-		m = p->m;
-		vc = zeros<vec>(3);
 
 		if( p->state == Free )
 			p->pre = new Point(*(p));
-		
-		if( p->state == Invalid )
-			vc = alpha_c*(x - p->xc)/h;		
-		
-		p->v +=  -alpha*( x - g )/h +
-				 h*f/m -c*p->v - vc ;
-		p->x += h*p->v;		
-	}
 
+		vec x = p->x;
+		vec g = p->g;
+		vec f = p->f;
+		double m = p->m;
+
+		p->vc += -alpha*( x - g )/h +
+				 h*f/m ;
+		p->xc += h*p->v;
+	}
+}
+
+void Solver::stepCollisions( Simulation& s ){
+	this->t += h;
 }
 
 void Solver::computeGoals( Simulation& s ){

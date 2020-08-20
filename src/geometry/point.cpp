@@ -6,6 +6,7 @@ using namespace arma;
 Point::Point( vec x, float m, vec color ):x(x), 
 								     v(zeros<vec>(3)),
 								     xc(zeros<vec>(3)),
+									 vc(zeros<vec>(3)),
 								     g(zeros<vec>(3)),
 								     m(m), 
 								     f(zeros<vec>(3)),

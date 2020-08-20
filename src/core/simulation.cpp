@@ -10,7 +10,6 @@ Simulation::Simulation( string workingDir ):running(false), pause(false), workin
 // Public 
 void Simulation::computeExternalForces(){
 	debugger.log(string("Adding contact forces"), LOOP, "SIMULATION" );
-	collisionMgr.getContactList()->resolveForces();	
 
 	if( this->forceChain == NULL )
 		return;
@@ -85,10 +84,13 @@ void Simulation::run( int maxSteps ){
 
 	while( this->running ){
 		if( !this->pause ){
-			collisionMgr.findCollisions( this->step );
+			
 			//collisionMgr.solveRegions( this->step );
-			solver.step( *this );
-			collisionMgr.pruneContacts();
+			solver.stepMaterial( *this );
+			collisionMgr.findCollisions( this->step );
+			collisionMgr.getContactList()->resolveForces();	
+			solver.stepCollisions( *this );
+			// collisionMgr.pruneContacts();
 			this->step++;
 		}
 		this->notifyViews( string("Simulation step: ") + to_string(this->step) );

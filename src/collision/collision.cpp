@@ -136,8 +136,8 @@ void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
 	Point *p = cp.point;
 	Edge e( p->pre, p );
 	vec pd = {ht.discretize(p->x(0)), ht.discretize(p->x(1)), ht.discretize(p->x(2))};
-	
-	if( cf.face->isEdgeCrossing( e ) ){
+	// 	Actual geometric test
+	if( cf.face->isPointColliding( e ) ){
 	// Point p penetrates the face cf.face
 		i = this->objects[ cp.go ];
 		j = this->objects[ cf.go ];
