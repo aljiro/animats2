@@ -221,6 +221,8 @@ bool DeformableContact::isResting(){
 void DeformableContact::addCollision( CollisionInformation ci ){
 	bool found = false;
 
+	// ci.point->v *= 0;
+	// ci.point->pre->v *=0;
 	for ( CollisionInformation stored : collisionsA )
 		if( stored.point == ci.point && stored.face == ci.face )
 			found = true;
@@ -282,7 +284,16 @@ void DeformableContact::solveContactRegion(){
 			Edge e( p->pre, p );
 
 			p->move = false;
-			p->x = f->getFaceProjection2(e);
+			
+			vec u = f->normal/norm(f->normal);
+		mat Pr = eye(3,3) - u*u.t();
+		// p->pre->v = Pr*p->pre->v;
+	
+
+		double h = f->getPenetrationDepth( e );
+		p->pre->v = 0*p->v;
+		p->v = h*u;
+		p->x = f->getFaceProjection2(e);
 		}
 
 		
@@ -292,7 +303,17 @@ void DeformableContact::solveContactRegion(){
 			Edge e( p->pre, p );
 
 			p->move = false;
-			p->x = f->getFaceProjection2(e);
+			
+
+			vec u = f->normal/norm(f->normal);
+		mat Pr = eye(3,3) - u*u.t();
+		// p->pre->v = Pr*p->pre->v;
+		
+
+		double h = f->getPenetrationDepth( e );
+		p->pre->v = 0*p->v;
+		p->v = h*u;
+		p->x = f->getFaceProjection2(e);
 		}		
 
 	}
@@ -350,14 +371,14 @@ void DeformableContact::computeSeparatingPlane(){
 
 void DeformableContact::resolve(){
 // Computing the response force for each coll
-		double Cr =  0.5;
+		double Cr = 1.0;
 		double m1 = 0;
 		double m2 = 0;
 		double j;
 		vec v2 = zeros<vec>(3);
 		vec v1 = zeros<vec>(3);
 		vec n;
-
+	return;
 	for( CollisionInformation ci : collisionsA ){
 		Face *f = ci.face;
 		Point *p = ci.point;
@@ -368,8 +389,16 @@ void DeformableContact::resolve(){
 		n = f->normal;
 
 		j = (1.0 + Cr)*dot(v1 - v2, n)/(1/m1 + 1/m2);
-		p->pre->v = zeros<vec>(3);
-		p->v = j*n/m1;
+		// p->pre->v = zeros<vec>(3);
+		// p->pre->v = p->v;
+		// p->v += j*n/m1;
+		vec u = f->normal/norm(f->normal);
+		mat Pr = eye(3,3) - u*u.t();
+		// p->pre->v = Pr*p->pre->v;
+		Edge e( p->pre, p );
+		double h = f->getPenetrationDepth( e );
+		p->pre->v = p->v;
+		p->v += h*u;
 	}
 
 	for( CollisionInformation ci : collisionsB ){
@@ -383,12 +412,22 @@ void DeformableContact::resolve(){
 
 		j = (1.0 + Cr)*dot(v1 - v2, n)/(1/m1 + 1/m2);
 
-		p->pre->v = zeros<vec>(3);
-		p->v = j*n/m1;
+		// p->pre->v = zeros<vec>(3);
+		// p->pre->v = p->v;
+		// p->v += j*n/m1;
+
+		vec u = f->normal/norm(f->normal);
+		mat Pr = eye(3,3) - u*u.t();
+		// p->pre->v = Pr*p->pre->v;
+		Edge e( p->pre, p );
+
+		double h = f->getPenetrationDepth( e );
+		p->pre->v = p->v;
+		p->v += h*u;
 	}
 
-	if( !react )
-		return;
+	// if( !react )
+	// 	return;
 
 	if( collisionsA.size() == 0 || collisionsB.size() == 0 )
 		return;
@@ -415,21 +454,21 @@ void DeformableContact::resolve(){
 	j = -(1.0 + Cr)*dot(v1 - v2, n);
 	cout << "Applying impulse: " << j << endl;
 
-	for( Point *p : A->getPoints() ){
-	// for(CollisionInformation ci : collisionsA){
-	// 	Point *p = ci.point;
-		p->pre->v = zeros<vec>(3);
-		// p->v = j*n;
-		p->v = zeros<vec>(3);
-	}
+	// for( Point *p : A->getPoints() ){
+	// // for(CollisionInformation ci : collisionsA){
+	// // 	Point *p = ci.point;
+	// 	p->pre->v = zeros<vec>(3);
+	// 	// p->v = j*n;
+	// 	p->v = zeros<vec>(3);
+	// }
 
-	for( Point *p : B->getPoints() ){
-	// for(CollisionInformation ci : collisionsB){
-	// 	Point *p = ci.point;
-		p->pre->v = zeros<vec>(3);	
-		// p->v = -j*n;
-		p->v = zeros<vec>(3);
-	}
+	// for( Point *p : B->getPoints() ){
+	// // for(CollisionInformation ci : collisionsB){
+	// // 	Point *p = ci.point;
+	// 	p->pre->v = zeros<vec>(3);	
+	// 	// p->v = -j*n;
+	// 	p->v = zeros<vec>(3);
+	// }
 
 }
 
@@ -463,20 +502,29 @@ void DeformableContact::pruneCollisionList( vector<CollisionInformation>& collis
 			this->react = false;
 		
 		// Debug::log(string("Checking prunning condition"), LOOP);
-		if( f->getPenetrationDepth(e) > 0.01 || ( acc >= 0.01) ){
+		if(  ( vel > 0.0) ){
+			// cin.get();
 			Debug::log(string("Prunning condition satisfied"), LOOP);
 			cout << "Prunning: " << acc << endl;
 			 //cin.get();
 			p->move = true;
+			// vec u = f->normal/norm(f->normal);
+			// mat Pr = eye(3,3) - u*u.t();
+			// // p->pre->v = Pr*p->pre->v;
+			// p->pre->v = p->v;
+			// p->v = 2*Pr*p->v;
 			Debug::log(string("Erasing contact"), LOOP);
 			toDel.push_back(it);
 			Debug::log(string("Done"), LOOP);
+			
 		}
 		else{
-			vec u = f->normal/norm(f->normal);
-			mat Pr = eye(3,3) - u*u.t();
-			p->pre->v = Pr*p->pre->v;
-			p->v = 0.1*Pr*p->v;
+			
+			// vec u = f->normal/norm(f->normal);
+			// mat Pr = eye(3,3) - u*u.t();
+			// // p->pre->v = Pr*p->pre->v;
+			// p->pre->v = p->v;
+			// p->v += Pr*p->v;
 		}
 	}
 

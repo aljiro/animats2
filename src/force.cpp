@@ -31,9 +31,25 @@ void GravityForce::apply( GeometricObject *go ){
 	vector<Point *>& points = go->getPoints();
 
 	for( Point *p : points ){
-		p->f[0] = 0.0;
-		p->f[1] = -8.0*p->m;
-		p->f[2] = 0.0;
+		p->f[0] += 0.0;
+		p->f[1] += -6.0*p->m;
+		p->f[2] += 0.0;
 	}	
 }
 
+HForce::HForce( ForceObject *fo ):ForceObject(fo){}
+
+void HForce::apply( GeometricObject *go ){
+	Debug::log( string("Applying gravity!"), LOOP );
+	vector<Point *>& points = go->getPoints();
+
+	for( Point *p : points ){
+		if( go->getId() == 2)
+		p->f[0] += -5.0;
+		else
+		p->f[0] += 5.0;
+
+		p->f[1] += 0.0*p->m;
+		p->f[2] += 0.0;
+	}	
+}

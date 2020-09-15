@@ -9,7 +9,7 @@ Solver::Solver( double h ):h(h), t(0.0){
 
 void Solver::step( Simulation& s ){
 	vector<Point *> points;
-	double c = 0.0;
+	double c = 2.0;
 
 	// Computing the goal positions
 	for( SoftBody *go : s.getSoftBodies() ){
@@ -37,12 +37,13 @@ void Solver::step( Simulation& s ){
 			vec f = points[i]->f;
 			double m = points[i]->m;
 			
+			if( points[i]->move )
 			points[i]->pre = new Point(*(points[i]));
 			
-			if( points[i]->move )
-				points[i]->v += -alpha*( x - g )/h + h*f/m;//- alpha*points[i]->vc/(h);
+			// if( points[i]->move )
+				points[i]->v += -alpha*( x - g )/h -h*c*points[i]->v + h*f/m;//- alpha*points[i]->vc/(h);
 			
-			points[i]->vc = zeros<vec>(3);			
+			points[i]->f = zeros<vec>(3);			
 		}
 
 		go->dx = zeros<vec>(3);

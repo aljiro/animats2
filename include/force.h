@@ -29,6 +29,13 @@ public:
 
 };
 
+class HForce: public ForceObject{
+public:
+	HForce( ForceObject *fo );
+	void apply( GeometricObject* go );
+
+};
+
 }}
 
 #endif
