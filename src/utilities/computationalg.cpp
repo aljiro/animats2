@@ -3,238 +3,572 @@
 using namespace arma;
 using namespace morph::animats;
 
-void morph::animats::sortVertices( vec x[] ){
+template<typename F>
+void morph::animats::zbrak( F fx, float x1, float x2, int n, float xb1[], float xb2[], int *nb ){
+    int nbb, i;
+    float x, fp, fc, dx;
 
-	if( !ltvec(x[0], x[1]) )
-		swap( x, 0, 1 );
+    nbb = 0;
+    dx = (x2 - x1)/n;
+    fp = fx( x = x1 );
 
-	if( !ltvec(x[1], x[2]) )
-		swap( x, 1, 2 );
+    for( i = 1; i <= n; i++ ){
+        fc = fx( x += dx );
 
-	if( !ltvec( x[0], x[1]) )
-		swap( x, 0, 1 );	
+        if( fc*fp < 0.0 ){
+            xb1[nbb] = x - dx;
+            xb2[nbb++] = x;
+            if( *nb == nbb ) return;
+        }
+
+        fp = fc;
+    }
+
+    *nb = nbb;
 }
 
-void morph::animats::computeAreas( Face* f, vec a, vec w, double A[] ){
-	vec x[3] = {f->points[0]->x, 
-				f->points[1]->x,
-				f->points[2]->x};
+template<typename F>
+float morph::animats::rtflsp( F func, float x1, float x2, float xacc ){
+    const int MAXIT_FP = 30;
+	int j;
+    float fl, fh, xl, xh, swap, dx, del, f, rtf;
 
-	sortVertices( x );
+    fl = func(x1);
+    fh = func(x2);
 
-	computeBaseAreas( a, w, x, A );
-	debugger.log("Finished computing areas", LOOP, "FACE");
+    if( fl*fh > 0.0 ){
+        cout << "Error, no bracketing" << endl; 
+        return 0.0;
+    }
+
+    if( fl < 0.0 ){
+        xl = x1;
+        xh = x2;
+    }else{
+        xl = x2;
+        xh = x1;
+        swap = fl;
+        fl = fh;
+        fh = swap;
+    }
+
+    dx = xh - xl;
+
+    for( j = 1; j <= MAXIT_FP; j++ ){
+        rtf = xl + dx*fl/(fl - fh);
+        f = func(rtf);
+
+        if( f < 0.0 ){
+            del = xl - rtf;
+            xl = rtf;
+            fl = f;
+        }else {
+            del = xh - rtf;
+            xh = rtf;
+            fh = f;
+        }
+
+        dx = xh - xl;
+        if( std::fabs(del) < xacc || f == 0.0 ) return rtf; 
+    }
+
+    cout << "Error: failed to converge" << endl;
+    return -1000;
 }
 
-void morph::animats::computeBaseAreas( vec a, vec w, vec x[], double A[] ){
-	mat M(3,3);
-	vec v1, v2;
+bool morph::animats::isProximal( Face *f, Point* p, double delta ){
+	// cout << "Checking proximity face-point" << endl;
+	double h_prox = 0.01;
+	double c_length = 10.0;
+	
+	if( delta == -1 )
+		delta = h_prox/c_length;
 
-	// Constructing the areas
-	for( int i = 0; i < 3; i++ ){
-		debugger.log("Computing A_" + to_string(i), LOOP, "FACE");
-		v1 = x[(i + 1)%3] - a;
-		v2 = x[(i + 2)%3] - a;
-		M(0, 0) = v1[0];
-		M(0, 1) = v1[1];
-		M(0, 2) = v1[2];
-		M(1, 0) = v2[0];
-		M(1, 1) = v2[1];
-		M(1, 2) = v2[2];
-		M(2, 0) = w[0];
-		M(2, 1) = w[1];
-		M(2, 2) = w[2];
-		A[i] = det(M)*0.5;
+	vec x1 = f->points[0]->x;
+	vec x2 = f->points[1]->x;
+	vec x3 = f->points[2]->x;
+	vec x4 = p->x;
+	vec x43 = x4 - x3;
+
+	f->computeNormal();
+
+	if( abs(dot(x43, f->normal)) < h_prox ){
+	// Potentially proximal
+		// compute projection onto the plane
+		vec x43_p = x4 - dot(x43, f->normal)*f->normal;
+		vec w = computeBarycentricCoords( x1, x2, x3, x43_p );
+		return allInInterval( w, -delta, 1 - delta);
 	}
+
+	return false;
 }
 
-void morph::animats::computeComplementaryArea( vec a, vec w, vec u, vec x[], double dW[] ){
-	mat W(3,3), U(3,3);
-	vec v1, v2;
-
-	// Constructing the areas
-	for( int i = 0; i < 3; i++ ){
-		v1 = x[(i + 1)%3] - a;
-		v2 = x[(i + 2)%3] - a;
-		// W
-		W(0, 0) = v1[0];
-		W(0, 1) = v1[1];
-		W(0, 2) = v1[2];
-		W(1, 0) = u[0];
-		W(1, 1) = u[1];
-		W(1, 2) = u[2];
-		W(2, 0) = w[0];
-		W(2, 1) = w[1];
-		W(2, 2) = w[2];
-		// U
-		U(0, 0) = u[0];
-		U(0, 1) = u[1];
-		U(0, 2) = u[2];
-		U(1, 0) = v2[0];
-		U(1, 1) = v2[1];
-		U(1, 2) = v2[2];
-		U(2, 0) = w[0];
-		U(2, 1) = w[1];
-		U(2, 2) = w[2];
-
-		dW[i] = (det(W) + det(U))*0.5;
+vec morph::animats::normalCoefficients( vec x1, vec x2, vec x3, vec x4 ){
+	// cout << "Computing the edge coefficients" << endl;
+	vec x21 = x2 - x1;
+	vec x43 = x4 - x3;
+	vec x31 = x3 - x1;
+	vec c;
+	double p = norm(cross(x21, x43));
+	if( p < 0.0001 ){
+		c = {0.5, 0.5};
+		return c;
 	}
+
+	// Solve linear system
+	mat A(2,2);
+	vec B = {dot(x21, x31), -dot(x43, x31)};
+	A(0,0) = dot(x21, x21);
+	A(0,1) = -dot(x21, x43);
+	A(1,0) = -dot(x21, x43);
+	A(1,1) = dot(x43, x43);
+	// cout << "Edge 1: " << printvec(x1) << " -> " << printvec(x2) << endl;
+	// cout << "Edge 2: " << printvec(x3) << " -> " << printvec(x4) << endl;
+	// cout << "Solving the system" << endl;
+	// cout << A << endl;
+	// cout << B << endl;
+	c = solve( A, B );
+	// cout << "c: " << c << endl;
+	
+	return c;
 }
 
-/* 
-    Predicate type A. Requires:
-    1. A point p in the face
-    2. An extreme v of the edge in the colliding shape
+vec morph::animats::clamp( vec x1, vec x2, vec x3, vec x4, vec c, vec *p1, vec *p2 ){
+	// Clamping
+	vec x21 = x2 - x1;
+	vec x43 = x4 - x3;
 
-    The test indicates if one of the extremes of the edge is on the positive 
-    half space of the plane that contains the face
-*/
-bool morph::animats::A( Point& face_point, vec edge_vector, vec normal ){
-	vec u = face_point.x;
-	return dot( normal, edge_vector - u ) > 0;
+	double a = c(0);
+	double b = c(1);
+	
+	a = a < 0.0? 0.0 : (a > 1.0? 1.0 : a);
+	b = b < 0.0? 0.0 : (b > 1.0? 1.0 : b);
+
+	(*p1) = x1 + a*x21;
+	(*p2) = x3 + b*x43;
+
+	double da = fabs(a - c(0));
+	double db = fabs(b - c(1));
+
+	if( da > 0 || db > 0 ){
+        vec u;
+		if( da > db ){ // Project p
+            u = (*p1) - x3;
+			(*p2) = x3 + dot(u, x43/norm(x43))*x43/norm(x43);
+			b = dot( x43, (*p2) - x3 )/dot(x43, x43);
+		}else if( db > da ){
+            u = (*p2) - x1;
+			(*p2) = x1 + dot(u, x21)*x21/dot(x21, x21);
+			a = dot(x21, (*p1) - x1)/dot(x21, x21);
+		}
+	}
+
+
+	vec cp = {a, b};
+	return cp;
 }
 
-/*
-    Predicate type B. Requires:
-    1. An edge in the face with extremes vn, vm
-    2. An edge of the incident object with extremes vl, vk
-    
-*/
-bool morph::animats::B( Point& vn, Point& vm, Point& vl, Point& vk ){
-	vec e_face = vm.x - vn.x;
-	vec e_object = vk.x - vl.x;
-	vec v = vm.x - vk.x;
+vec morph::animats::computeEdgeNormal( vec x1, vec x2, vec x3, vec x4 ){
+	vec x21 = x2 - x1;
+	vec x43 = x4 - x3;
+	vec x31 = x3 - x1;
 
-	vec u = cross( e_face, e_object );
-	return dot( u, v ) > 0;
-}
+	// Check if they are parallel
+	double p = norm(cross(x21, x43));	
 
-	/* 
-		Checks the predicates for face piercing.
-		(cf.face->isPenetrated( e ) || 
-		 cf.face->penetrates(p)) && 
-		 cf.face->isInsideProjection(e)
-	*/
-
-
-vec morph::animats::faceObjectCentroid( vector<Point *>& face_points, bool pre ){
-	vec vv = zeros<vec>(3);
-	vec x;
-
-	for( int i = 0; i <face_points.size(); i++ ){
-		if( pre && face_points[i]->pre != NULL )
-			x = face_points[i]->pre->x;
+	if( p < 0.0001 ){
+		// cout << "Parallel edges" << endl;
+		if( norm( x1 - x3 ) < norm( x1 - x4 )) 
+			return x1 - x3;
 		else
-			x = face_points[i]->x;
-
-		vv += x;
-	}
-
-	vv /= face_points.size();
-	return vv;
-}
-
-bool morph::animats::isCoplanar( vec v, vec normal ){
-	double epsilon = 0.01;
-	double r = abs(dot(v, normal));
-
-	return r < epsilon;
-}
-
-vec morph::animats::getPointOfProjection( vec x[], double A[] ){
-	vec q = zeros<vec>(3);
-	double sA = A[0] + A[1] + A[2];
-
-	for( int i = 0; i < 3; i++ )
-			q += (A[i]/sA)*x[i];				
-
-	return q;
-}
-
-vec morph::animats::computeFaceProjection( vec x[], vec a, vec w ) {
-	
-	double A[3];
-	computeAreas( a, w, A );
-	// Applying the condition
-	
-	if( ((A[0]*A[1]) > 0) && ((A[0]*A[2]) > 0) ){
-		// Computing the point
-		return getPointOfProjection( x, A );
+			return x1 - x4;
 	}else{
+		vec c = normalCoefficients( x1, x2, x3, x4 );
+		// To-Do: Do the clamping correctly
+		vec x_p;
+		vec x_f;
 
-		cout << "Ups, the projection is not inside the face" << endl;
-
-		cout << "q: " << printvec(getPointOfProjection( x, A )) << endl;
-		cout << "a: " << printvec(a) << endl;
-		cout << "w: " << printvec(w) << endl;
-		for(int i = 0; i<3; i++ )cout << "x" << i << ": " << printvec(x[i]) << endl;
-		
-		return e.v0->x;
+		clamp( x1, x2, x3, x4, c, &x_p, &x_f );
+		return x_p - x_f;
 	}
-	
 }
 
-bool morph::animats::isInsideProjection( Edge& e ){
-	debugger.log("Checking if the projection is inside", LOOP, "FACE");
-	try{
-		vec q = getFaceProjection( e );
+double morph::animats::computeEdgeDistance( vec x1, vec x2, vec x3, vec x4 ){
+	return norm( computeEdgeNormal(x1, x2, x3, x4) );
+} 
+
+bool morph::animats::isProximal( Edge *ep, Edge* ef, double delta ){
+	// cout << "Checking proximity edge-edge" << endl;
+	if( delta == -1 )
+		delta = 0.01;
+
+	vec x1 = ep->v0->x;
+	vec x2 = ep->v1->x;
+	vec x3 = ef->v0->x;
+	vec x4 = ef->v1->x;
+	// cout << "Computing edge distance" << endl;
+	double d = computeEdgeDistance(x1, x2, x3, x4 );
+	return d < delta;
+}
+
+double morph::animats::collision_poly(double t, vec x1, vec x2, vec x3, vec x4, vec v1, vec v2, vec v3, vec v4 ){
+	vec x21 = x2 - x1;
+	vec x31 = x3 - x1;
+	vec x41 = x4 - x1;
+	vec v21 = v2 - v1;
+	vec v31 = v3 - v1;
+	vec v41 = v4 - v1;
+
+	vec a = x21 + t*v21;
+	vec b = x31 + t*v31;
+	vec c = x41 + t*v41;
+
+	return dot(cross( a, b ), c);
+}
+
+bool morph::animats::isContact( Face* f, Point* p ){
+	// cout << "Checking contact" << endl;
+	vec x1 = f->points[0]->x;
+	vec x2 = f->points[1]->x;
+	vec x3 = f->points[2]->x;
+	vec x4 = p->x;
+
+	f->computeNormal();
+	vec w = computeBarycentricCoords( x1, x2, x3, x4 );
+
+	if( abs(dot(f->normal, x1-x4)) < 1e-10 && allInInterval(w, 0, 1) )
 		return true;
-	}catch( std::exception& e ){
+	else return false;	 
+}
+
+bool morph::animats::isContact( Edge* ep, Edge* ef ){
+
+	vec x1 = ep->v0->x;
+	vec x2 = ep->v1->x;
+	vec x3 = ef->v0->x;
+	vec x4 = ef->v1->x;
+	// cout << "Computing edge distance" << endl;
+	double d = computeEdgeDistance(x1, x2, x3, x4 );
+	return d < 1e-10;
+}
+
+bool morph::animats::isColliding( Face *f, Point* p, vec *w, double* hc, double current_h ){
+	// cout << "Checking f-p collision: h = " << current_h << endl;
+	double h = current_h;
+	double delta = 1e-10;
+	vec x1 = f->points[0]->x;
+	vec x2 = f->points[1]->x;
+	vec x3 = f->points[2]->x;
+	vec x4 = p->x;
+	vec v1 = f->points[0]->v_half;
+	vec v2 = f->points[1]->v_half;
+	vec v3 = f->points[2]->v_half;
+	vec v4 = p->v_half;
+
+	f->computeNormal();
+	if( isContact( f, p ) && dot((v4 - v1),f->normal)< 0 ){
+		(*hc) = 0.0;
+		(*w) = computeBarycentricCoords( x1, x2, x3, x4 );
+		return true;
+	}
+
+	auto fx = [&]( float t ){
+        return collision_poly( t, x1, x2, x3, x4, v1, v2, v3, v4 );
+    };
+
+	int nb = 3;
+    float tb1[3], tb2[3];
+    zbrak( fx, 0.0, h, 30, tb1, tb2, &nb );
+
+    if( nb == 0 ){
 		return false;
 	}
 
-}
-	
-vec morph::animats::getFaceOrthogonalProjection( Edge& e ){
-	if( this->recompute ){
-		this->computeNormal();
+	float t1, t2, rt = 10000, trt;
+
+	for( int i = 0; i < nb; i++ ){
+		t1 = tb1[i];
+		t2 = tb2[i];
+		rt = rtflsp( fx, t1, t2, 1e-10);
+		
+		vec u1 = x1 + rt*v1;
+		vec u2 = x2 + rt*v2;
+		vec u3 = x3 + rt*v3;
+		vec y =  x4 + rt*v4;
+		vec nt = cross(u1-u2, u1-u3);
+
+		(*w) = computeBarycentricCoords( u1, u2, u3, y );
+		(*hc) = rt;
+
+		if( abs(dot(nt, u1-y)) < 0.00001 && allInInterval( *w, -delta, 1-delta) ){
+			return true;
+		}
 	}
 	
-	vec u = this->normal/norm(this->normal);
-	mat P = eye(3,3) - u*u.t();
-
-	//if( dot( u0, this->normal ) < 0 )
-		return  P*( e.v1->x - this->getCentroid()) + this->getCentroid();
-	//else
-	//	return 0;
+	return false;	
 }
 
-double morph::animats::getOrthogonalPenetrationDepth( Edge& e ){
+bool morph::animats::isColliding( Edge* ep, Edge* ef, double *hc, double current_h ){
+	// cout << "Checking e-e collision" << endl;
+	double h = current_h;
 
-	if( this->recompute ){
-		this->computeNormal();
+	// if( h < 1e-6 )
+	// 	{cout << "step too small!"<< endl;cin.get();}
+	double delta = 1e-6;
+	vec x1 = ep->v0->x;
+	vec x2 = ep->v1->x;
+	vec x3 = ef->v0->x;
+	vec x4 = ef->v1->x;
+	vec v1 = ep->v0->v_half;
+	vec v2 = ep->v1->v_half;
+	vec v3 = ef->v0->v_half;
+	vec v4 = ef->v1->v_half;
+
+	vec n = computeEdgeNormal(x1, x2, x3, x4 );
+
+	if( isContact( ep, ef ) && dot(v4-v1, n) < 0 ){
+		(*hc) = 0.0;
+		return true;
 	}
 
-	vec u = this->normal/norm(this->normal);
-	mat P = u*u.t();
+	auto f = [&]( float t ){
+        return collision_poly( t, x1, x2, x3, x4, v1, v2, v3, v4 );
+    };
 
-	//if( dot( u0, this->normal ) < 0 )
-	vec px = P*( e.v1->x - this->getCentroid() );
-	return norm(px);
-	//else
-	//	return 0;
+	int nb = 3;
+    float tb1[3], tb2[3];
+    zbrak( f, 0.0, h, 30, tb1, tb2, &nb );
+    // cout << "Potential roots:" << nb << endl;
+
+    if( nb == 0 ) return false;
+
+	float t1, t2, rt = 10000, trt;
+	
+	for( int i = 0; i < nb; i++ ){
+		t1 = tb1[i];
+		t2 = tb2[i];
+		rt = rtflsp( f, t1, t2, 1e-10);
+		
+		double d = computeEdgeDistance( x1 + rt*v1, x2 + rt*v2, x3 + rt*v3, x4 + rt*v4 );
+		(*hc) = rt;
+		if( d < delta ) return true;
+	}
+	
+	return false;	
+}
+
+vector<vec> morph::animats::getInelasticImpulses( Face *f, Point *p, vec *wp ){
+	// cout << "Getting f-p inelastic impulses" <<endl;
+	vec x1 = f->points[0]->x;
+	vec x2 = f->points[1]->x;
+	vec x3 = f->points[2]->x;
+	vec x4 = p->x;
+	vec v1 = f->points[0]->v_half;
+	vec v2 = f->points[1]->v_half;
+	vec v3 = f->points[2]->v_half;
+	vec v4 = p->v_half;
+	// Compute normal direction
+	f->computeNormal();
+	vec n = f->normal;
+	// Compute relative velocity
+	vec w;
+	if( wp == NULL ){
+		vec x43 = x4 - x3;
+		vec x4_p = x4 - dot(x43, n)*n;
+		w = computeBarycentricCoords( x1, x2, x3, x4_p );
+	}
+	else w = *wp;
+
+	vec vb = w(0)*v1 + w(1)*v2 + w(2)*v3;
+	vec xt = w(0)*x1 + w(1)*x2 + w(1)*x3;
+	vec xn = x4 - xt;
+	vec v_rel = v4 - vb;
+
+	// if( dot(n, xn) < 0 ){
+	// 	cout << "Normal pointing in the wrong direction!!!" << endl;
+	// 	cin.get();
+	// 	n = -n;
+	// }
+	double vn;
+
+	if(dot(v_rel, n) > 0)
+		vn = 0.0;
+	else
+		vn = -dot(v_rel, n);
+	// cout << "Relative velocity: " << vn << ", with vb: " << printvec(vb) << endl;
+
+	// Adding impulse
+	double mp = p->m;
+	double mt = f->points[0]->m;
+	double Ip = mp*vn/2.0;
+	double It = mt*vn/2.0;
+
+
+	double I = 2*Ip/( 1 + w(0)*w(0) + w(1)*w(1) + w(2)*w(2) );
+	vector<vec> vels ={ -(w(0)*I/mt)*n, -(w(1)*I/mt)*n, -(w(2)*I/mt)*n, (I/mp)*n};
+	// cout << "Face-point Impuses: " << vels[0] << ", " << vels[1] << ", " << vels[2] << ", " << vels[3] << endl;
+	return vels;
+}
+
+vector<vec> morph::animats::getInelasticImpulses( Edge *ep, Edge *ef ){
+	// cout << "Getting inelasting e-e impulses" << endl;
+	vec x1 = ep->v0->x;
+	vec x2 = ep->v1->x;
+	vec x3 = ef->v0->x;
+	vec x4 = ef->v1->x;
+	vec v1 = ep->v0->v_half;
+	vec v2 = ep->v1->v_half;
+	vec v3 = ef->v0->v_half;
+	vec v4 = ef->v1->v_half;
+	// Compute normal direction
+	vec n = computeEdgeNormal( x1, x2, x3, x4 );
+	n /= norm(n);
+
+	// Compute relative velocity
+	vec c = normalCoefficients( x1, x2, x3, x4 );
+	vec p1, p2;
+	
+	c = clamp( x1, x2, x3, x4, c, &p1, &p2 );
+	double a = c(0);
+	double b = c(1);
+	vec va = (1-a)*v1 + a*v2;
+	vec vb = (1-b)*v3 + b*v4;
+	
+	vec v_rel = va - vb;
+	double vn;
+	if( dot( v_rel, n ) > 0 ){
+		vn = 0.0;
+	}else
+		vn = -dot( v_rel, n );
+	
+	// Compute impulse
+	double m1 = ep->v0->m;
+	double m2 = ef->v0->m;
+	double Ip = m1*vn/2.0;
+	double If = m2*vn/2.0;
+	double I1 = 2*Ip/(a*a + (1-a)*(1-a) + b*b + (1-b)*(1-b));
+	double I2 = 2*If/(a*a + (1-a)*(1-a) + b*b + (1-b)*(1-b));
+	vector<vec> vels = {(1-a)*(I1/m1)*n, a*(I1/m1)*n, -(1-b)*(I2/m2)*n, -b*(I2/m2)*n};
+	// cout << "Edge Impuses: " << vels[0] << ", " << vels[1] << ", " << vels[2] << ", " << vels[3] << endl;
+	return vels;
+}
+
+vector<vec> morph::animats::getCollisionImpulses( Face* f, Point *p, vec *wp ){
+	// cout << "Computing face-point collision impulses" << endl;
+	vec x1 = f->points[0]->x;
+	vec x2 = f->points[1]->x;
+	vec x3 = f->points[2]->x;
+	vec x4 = p->x;
+	vec v1 = f->points[0]->v_half;
+	vec v2 = f->points[1]->v_half;
+	vec v3 = f->points[2]->v_half;
+	vec v4 = p->v_half;
+	// Compute normal direction
+	f->computeNormal();
+	vec n = f->normal;
+	// Compute relative velocity
+	vec w;
+	if( wp == NULL )
+		w = computeBarycentricCoords( x1, x2, x3, x4 );
+	else w = *wp;
+
+	vec vb = w(0)*v1 + w(1)*v2 + w(2)*v3;
+	vec xt = w(0)*x1 + w(1)*x2 + w(2)*x3;
+	vec xn = x4 - xt;
+	// if( dot(n, xn) < 0 ){
+	// 	cout << "Normal pointing in the wrong direction!!!" << endl;
+	// 	// cin.get();
+	// 	n = -n;
+	// }
+	vec vr = v4 - vb;
+	double vn = -dot( vr, n ); // pointing outside the triangle assuming they are approaching
+
+	// Adding impulse
+	double mp = p->m;
+	double mt = f->points[0]->m;
+	double Ip = mp*vn;
+	double It = mt*vn;
+
+	if (  dot( vr, n ) > 0 ){
+		Ip = 0.0;
+		// If = 0.0;
+	}else{
+		Ip = mp*vn;
+		// If = mt*vn;
+	}
+
+	double I = 2*Ip/( 1 + w(0)*w(0) + w(1)*w(1) + w(2)*w(2) );
+	vector<vec> vels ={ -(w(0)*I/mt)*n, -(w(1)*I/mt)*n, -(w(2)*I/mt)*n, (I/mp)*n};
+	
+	return vels;
 
 }
+
+vector<vec> morph::animats::getCollisionImpulses( Edge* ep, Edge* ef ){
+	// cout << " Computing edge - edge collision impulses" << endl;
+	vec x1 = ep->v0->x;
+	vec x2 = ep->v1->x;
+	vec x3 = ef->v0->x;
+	vec x4 = ef->v1->x;
+	vec v1 = ep->v0->v_half;
+	vec v2 = ep->v1->v_half;
+	vec v3 = ef->v0->v_half;
+	vec v4 = ef->v1->v_half;
+	// Compute normal direction
+	vec n = computeEdgeNormal( x1, x2, x3, x4 );
+	n /= norm(n);
+
+	// Compute relative velocity
+	vec c = normalCoefficients( x1, x2, x3, x4 );
+	vec p1, p2;
+	c = clamp( x1, x2, x3, x4, c, &p1, &p2 );
+	double a = c(0);
+	double b = c(1);
+	
+	vec va = (1-a)*v1 + a*v2;
+	vec vb = (1-b)*v3 + b*v4;
+	
+	vec v_rel = va - vb;
+	double vn = -dot( v_rel, n );	
+
+	
+	// Compute impulse
+	double m1 = ep->v0->m;
+	double m2 = ef->v0->m;
+	double Ip = m1*vn;
+	double If = m2*vn;
+
+	if (  dot( v_rel, n ) > 0 ){
+		Ip = 0.0;
+		If = 0.0;
+	}else{
+		Ip = m1*vn;
+		If = m2*vn;
+	}
+
+
+	double I1 = 2*Ip/(a*a + (1-a)*(1-a) + b*b + (1-b)*(1-b));
+	double I2 = 2*If/(a*a + (1-a)*(1-a) + b*b + (1-b)*(1-b));
+	vector<vec> vels = {(1-a)*(I1/m1)*n, a*(I1/m1)*n, -(1-b)*(I2/m2)*n, -b*(I2/m2)*n};
+	
+	return vels;
+}
+
 
 /**
  * getCentroid - DEPRECATED 
  */
-vec morph::animats::getCentroid(){
-	vec p1 = this->edges[0].v0->x;
-	vec p2 = this->edges[1].v0->x;
-	vec p3 = this->edges[2].v0->x;
+vec morph::animats::centroid( vector<Point *>& points ){
+	vec p1 = points[0]->x;
+	vec p2 = points[1]->x;
+	vec p3 = points[2]->x;
 
 	return (p1 + p2 + p3)/3;
 }
-/**
- * isInside - Tests if a given point is inside the face
- */
-bool morph::animats::isInside( Face* f, vec pos ){
-	// Computing the barycentric coordinates
-	vec p1 = f->edges[0].v0->x;
-	vec p2 = f->edges[1].v0->x;
-	vec p3 = f->edges[2].v0->x;
 
+
+vec morph::animats::computeBarycentricCoords( vec p1, vec p2, vec p3, vec pos ){
+	// Computing the barycentric coordinates
 	vec u0 = p2 - p1;
 	vec u1 = p3 - p1;
 	vec u2 = pos - p1;
@@ -251,5 +585,6 @@ bool morph::animats::isInside( Face* f, vec pos ){
 	double lambda3 = (d00*d12 - d01*d02)/dT;
 	double lambda1 = 1 - lambda2 - lambda3;
 
-	return lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0;
+	vec w = {lambda1, lambda2, lambda3};
+	return w;
 }

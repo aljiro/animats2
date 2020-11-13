@@ -1,3 +1,6 @@
+#ifndef COMPALG_H
+#define COMPALG_H
+
 #include <iostream>
 #include <vector>
 #include <armadillo>
@@ -6,66 +9,41 @@
 #include "../geometry/point.h"
 #include "../geometry/edge.h"
 #include "../geometry/face.h"
+#include "../geometry/point.h"
 
 using namespace arma;
+using namespace std;
 
 namespace morph{
 namespace animats{
+class Face;
 
-void sortVertices( vec x[] );
+template<typename F>
+void zbrak( F fx, float x1, float x2, int n, float xb1[], float xb2[], int *nb );
 
-void computeAreas( Face* f, vec a, vec w, double A[] );
-
-void computeBaseAreas( vec a, vec w, vec x[], double A[] );
-
-void computeComplementaryArea( vec a, vec w, vec u, vec x[], double dW[] );
-
-/* 
-    Predicate type A. Requires:
-    1. A point p in the face
-    2. An extreme v of the edge in the colliding shape
-
-    The test indicates if one of the extremes of the edge is on the positive 
-    half space of the plane that contains the face
-*/
-bool A( Point& face_point, vec edge_vector, vec normal );
-
-/*
-    Predicate type B. Requires:
-    1. An edge in the face with extremes vn, vm
-    2. An edge of the incident object with extremes vl, vk
-    
-*/
-bool B( Point& vn, Point& vm, Point& vl, Point& vk );
-
-	/* 
-		Checks the predicates for face piercing.
-		(cf.face->isPenetrated( e ) || 
-		 cf.face->penetrates(p)) && 
-		 cf.face->isInsideProjection(e)
-	*/
-
-vec faceObjectCentroid( vector<Point *>& face_points, bool pre );
-
-bool isCoplanar( vec v, vec normal );
-
-vec getPointOfProjection( vec x[], double A[] );
-
-vec computeFaceProjection( vec a, vec w );
-
-bool isInsideProjection( Edge& e );
-	
-vec getFaceOrthogonalProjection( Edge& e );
-
-double getOrthogonalPenetrationDepth( Edge& e );
+template<typename F>
+float rtflsp( F func, float x1, float x2, float xacc );
+vec clamp( vec x1, vec x2, vec x3, vec x4, vec c, vec *p1, vec *p2 );
+bool isProximal( Face *f, Point* p, double delta = -1 );
+bool isProximal( Edge *ep, Edge* ef, double delta = -1 );
+bool isColliding( Face *f, Point* p, vec *w, double* hc, double current_h );
+bool isColliding( Edge* ep, Edge* ef, double* hc, double current_h );
+bool isContact( Face* f, Point* p );
+bool isContact( Edge* ep, Edge* ef );
+vector<vec> getInelasticImpulses( Face *f, Point *p, vec *w );
+vector<vec> getInelasticImpulses( Edge *ep, Edge *ef );
+vector<vec> getCollisionImpulses( Face* f, Point *p, vec *wp );
+vector<vec> getCollisionImpulses( Edge* ep, Edge* ef );
 
 /**
- * getCentroid - DEPRECATED 
+ * centroid
  */
-vec getCentroid();
-/**
- * isInside - Tests if a given point is inside the face
- */
-bool isInside( Face* f, vec pos );
-
+vec centroid( vector<Point *>& points );
+vec computeBarycentricCoords( vec p1, vec p2, vec p3, vec pos );
+vec normalCoefficients( vec x1, vec x2, vec x3, vec x4 );
+double collision_poly(double t, vec x1, vec x2, vec x3, vec x4, vec v1, vec v2, vec v3, vec v4 );
+vec computeEdgeNormal( vec x1, vec x2, vec x3, vec x4 );
+double computeEdgeDistance( vec x1, vec x2, vec x3, vec x4 );
 }}
+
+#endif

@@ -26,7 +26,7 @@ void ReportView::setup( Simulation& s ){
 void ReportView::dumpPoints( Simulation& s ){
 	cout << "Dumping points" << endl;
 
-	for( SoftBody *b : s.getSoftBodies() ){
+	for( SoftBody *b : s.environment->getSoftBodies() ){
 		fpoints << b->getId() << ",";
 
 		for( int i = 0; i < b->getPoints().size()-1; i++ ){
@@ -40,19 +40,19 @@ void ReportView::dumpPoints( Simulation& s ){
 }
 
 void ReportView::dumpContactArea( Simulation& s ){
-	cout << "Dumping contacts" << endl;
-	ContactList *cl = s.collisionMgr.getContactList();
-	double area;
+	// cout << "Dumping contacts" << endl;
+	// ContactList *cl = s.collisionMgr.getContactList();
+	// double area;
 
-	cout << ">>>>> Number of contacts: " << cl->getContacts().size() << endl;
+	// cout << ">>>>> Number of contacts: " << cl->getContacts().size() << endl;
 
-	for( Contact *c : cl->getContacts() ){
-		cout << ">> Size of the collisions: " << ((SignoriniContact *)c)->collisions.size() << endl;
-		area = ((SignoriniContact *)c)->collisions.size();
-		fcontacts << area << endl;
-	}
+	// for( Contact *c : cl->getContacts() ){
+	// 	cout << ">> Size of the collisions: " << ((SignoriniContact *)c)->collisions.size() << endl;
+	// 	area = ((SignoriniContact *)c)->collisions.size();
+	// 	fcontacts << area << endl;
+	// }
 
-	cin.get();
+	// cin.get();
 }
 
 ReportView::~ReportView(){

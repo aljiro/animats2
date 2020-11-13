@@ -2,167 +2,114 @@
 
 using namespace morph::animats;
 
-CollisionManager::CollisionManager():ht(5000,0.2){
-	this->contacts = new ContactList();
+// Collision List
+CollisionList::CollisionList(){
+
 }
 
-void CollisionManager::clear(){
-	// TO-DO: Memory management?
-	indexes.clear();
-	objects.clear();
-	points.clear();
-	faces.clear();
-	contacts->clear();
+void CollisionList::push( Collision* c ){
+    vector<Collision *>::iterator it;
+    // cout << "Number of collisions before: " << collisions.size() << endl;
+    if( collisions.empty() )collisions.push_back( c );
+    else{
+        for( it = collisions.begin(); it != collisions.end(); ++it  ){
+            if( (*it)->hc > c->hc ){
+                collisions.insert( it, c );
+                break;
+            }
+        }
+    }
+
+    // cout << "collision list: ";
+    // for( it = collisions.begin(); it != collisions.end(); ++it  )
+    //     cout << (*it)->hc << ", ";
+    // cout << endl;
+
+    // cout << "Number of collisions after: " << collisions.size() << endl;
+    // cin.get();
 }
 
-ContactList *CollisionManager::getContactList(){
-	return contacts;
+int CollisionList::count(){
+    return collisions.size();
 }
 
-void CollisionManager::findCollisions( int step ){
-	// Hash the points      
-	firstPass( step );
-	// Scan the faces    
-	secondPass( step );
+bool CollisionList::isEmpty(){
+    return collisions.empty();
 }
 
-void CollisionManager::solveRegions( int step ){
-	debugger.log(string("Solving contact solveRegions"), LOOP);
-	// for( Contact *c : contacts->getContacts() )
-	// 	c->solveContactRegion();
+Collision* CollisionList::pop(){
+    // cout << "Poping!" << collisions.size() << endl;
+    if( !this->isEmpty() ){
+        // cout << "Getting collision" << endl;
+        Collision *c = this->collisions[0];
+        this->collisions.erase( collisions.begin() );
+
+        return c;
+    }
+
+    return NULL;
 }
 
-void CollisionManager::registerObject(GeometricObject *go){
+void CollisionList::discount( double hc ){
+    for( Collision *c : collisions )
+        c->hc -= hc;
+}
 
-	vector<int> objIdxs;
-	debugger.log(string("Registering objects for collision detection"), LOOP, "COLLISION");
-	vector<Point*> gPoints = go->getPoints();
-	vector<Face*> gFaces = go->getFaces();
-	// Put all the pointers to points in the corresponding vector
-	for( int i = 0; i < gPoints.size(); i++ ){
+// Collision
+Collision::Collision( double hc ):hc(hc){
+
+}
+
+void Collision::updatePointSpeed( Point *p, vec imp ){
+	if( p->state != Colliding ){
+		p->v_half = 0*imp;
+		p->state = Colliding;
+	}else{
+		p->v_half = 0*imp;
 		
-		objIdxs.push_back( this->points.size() );
-
-		CPoint cp;
-		cp.point = gPoints[i];
-		cp.go = go;
-		cp.originalIdx = i;
-		this->points.push_back( cp );
 	}
-
-	debugger.log(string("Registering faces"), LOOP, "COLLISION");
 	
-	for( int i = 0; i < go->getFaces().size(); i++ ){
-		CFace cf;
-		cf.face = gFaces[i];
-		cf.go = go;
-		cf.aabb = new Box();
-		cf.originalIdx = i;
-		this->faces.push_back( cf );
-	}
-
-	this->indexes[go] = objIdxs;
-	this->objects[go] = this->objects.size();
+    // p->interactions++;
 }
 
-void CollisionManager::firstPass( int step ){
-	debugger.log(string("Finding collisions, first pass"), LOOP, "COLLISION");
-
-	for( int i = 0; i < this->points.size(); i++ ){
-		// Add hash
-		CPoint cp = this->points[i];
-		Point *p = cp.point;
-		vector<int> idxs = indexes[cp.go]; 
-		this->ht.hashIn( cp.point->x, i, step );
-	}
-
-	// Compute the bounding boxes
-	for( CFace cf : this->faces ){
-		Box::compute( cf.face->points, cf.aabb );
-	}
+// FPCollision
+FPCollision::FPCollision( double hc, Face *f, Point *p, vec w ):Collision(hc),f(f),p(p),w(w){
+    this->ctype = 0;
 }
 
-void CollisionManager::secondPass( int step ){
-	debugger.log(string("Finding collisions, second pass"), GENERAL, "COLLISION");
+void FPCollision::resolve(){
+    // set velocities - inelastic collision
+		debugger.log(string("Face-point collision detected. Computing colliding impulses"), LOOP, "COLLISION");
+		vector<vec> c_imp = getCollisionImpulses( f, p, &w );			
 
-	for( int i = 0; i < this->faces.size(); i++ ){		
-		CFace cf = this->faces[i];
-		this->evaluateContacts( cf, step );
-	}
+		//if( cf.go->type != PLANE ){
+        for( int i = 0; i < 3; i++ ){
+            this->updatePointSpeed( f->points[i], c_imp[i] );
+        }
+		//}
+	
+		//if( cp.go->type != PLANE ){
+        this->updatePointSpeed( p, c_imp[3] );
+		//}	
 }
 
-void CollisionManager::evaluateContacts( CFace cf, int step ){
-	unsigned int h;
-	// Discretizing the AABB	
-	this->ht.discretizeBox(cf.aabb);	
-
-	// Hashing the cells
-	for( int kx = (int)cf.aabb->min(0); kx <= cf.aabb->max(0); kx++ ){
-		for( int ky = (int)cf.aabb->min(1); ky <= cf.aabb->max(1); ky++ ){
-			for( int kz = (int)cf.aabb->min(2); kz <= cf.aabb->max(2); kz++ )
-			{
-				vec p = {kx, ky, kz};				
-				h = ht.getHashDiscrete( p );
-				CHashItem chi = ht.getItem( h );
-
-				if( chi.timestamp == step ){					
-					this->handleCollisions( cf, chi, step );
-				}
-			}
-		}
-	}
+// EECollision
+EECollision::EECollision( double hc, Edge *e1, Edge *e2 ):Collision(hc), e1(e1), e2(e2){
+     this->ctype = 1;
 }
-
-void CollisionManager::handleCollisions( CFace cf, CHashItem chi, int step ){
-	debugger.log(string("Handling collision"), LOOP, "COLLISION");
-
-	for( list<int>::iterator it = chi.items.begin(); it != chi.items.end(); ++it ){
-
-		CPoint cp = this->points[*it];
-		Point *p = cp.point;		
-		
-		if( cp.go == cf.go ) continue;
-		if( p->pre == NULL ) continue;
-
-		this->storeCollision( cf, cp );
-	}
-}
-
-void CollisionManager::storeCollision( CFace& cf, CPoint& cp ){
-	int i, j;
-
-	debugger.log(string("Storing collision"), LOOP, "COLLISION");
-
-	Point *p = cp.point;
-	Edge e( p->pre, p );
-	vec pd = {ht.discretize(p->x(0)), ht.discretize(p->x(1)), ht.discretize(p->x(2))};
-	// 	Actual geometric test
-	if( cf.face->isPointColliding( e ) ){
-	// Point p penetrates the face cf.face
-		i = this->objects[ cp.go ];
-		j = this->objects[ cf.go ];
-
-		CollisionInformation ci;
-		ci.point = cp.point;
-		ci.face = cf.face;
-		ci.goPoint = cp.go;
-		ci.goFace = cf.go;
-
-		debugger.log(string("Adding contact"), LOOP, "COLLISION");
-		// Changing point state
-		cp.point->state = Invalid;
-		// Adding to the contact list
-		this->contacts->add( cp.go, cf.go, ci );
-	}
-}
-
-
-void CollisionManager::pruneContacts( ){
-	// debugger.log(string("Prunning contacts"), LOOP, "COLLISION");
-	this->contacts->pruneContacts();
-}
-
-
-CollisionManager::~CollisionManager(){
-
+    
+    
+void EECollision::resolve(){
+    // change velocities - inelastic collision
+    debugger.log(string("Edge-edge collision detected. Computing edge-edge colliding impulses"), LOOP, "COLLISION");
+    vector<vec> c_imp = getCollisionImpulses( e1, e2 );
+    // cout << "Modifying the v_halfs" << endl;
+    // if( cp.go->type != PLANE ){
+        this->updatePointSpeed( e1->v0, c_imp[0] );
+        this->updatePointSpeed( e1->v1, c_imp[1] );
+    // }
+    // if( cf.go->type != PLANE ){
+        this->updatePointSpeed( e2->v0, c_imp[2] );
+        this->updatePointSpeed( e2->v1, c_imp[3] );
+    // }
 }

@@ -11,6 +11,7 @@
 #include "shader.hpp"
 #include "view.h"
 #include "../geometry/gobject.h"
+#include "../core/environment.h"
 
 using namespace std;
 
@@ -40,20 +41,24 @@ protected:
 	GLuint lightPowerId;
 	GLuint lightColorId;
 	GLuint lightPositionId;
+	GLuint alphaId;
 
 	glm::mat4 MVP;
 	glm::mat4 M;
 	glm::mat4 V;
 	glm::mat4 P;
-	int width, height;
+	
 	float lightPower;
 	GLfloat *lightColor;
 	GLfloat *lightPosition;
 	// PArameters for user control
 	CameraParams cParams;
+	Environment* environment;
 
 public:
-	SimView( Simulation& s );
+int width, height;
+
+	SimView( Environment *environment );
 	int init();
 	void setup( Simulation& s );
 	void draw(  Simulation& s );

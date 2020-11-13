@@ -43,7 +43,7 @@ void XMLLoader::load( Simulation *s, char *dir ){
 
 void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 	// Initialize standard position plane
-	RigidBody *p = s->addRigidBody( rand()%2000, "plane" );
+	RigidBody *p = s->environment->addRigidBody( rand()%2000, "plane" );
 	GeometricTransform gt;	
 	
 	XMLNode *it = node->FirstChild();
@@ -82,7 +82,7 @@ void XMLLoader::addPlane( Simulation *s, XMLNode* node ){
 
 void XMLLoader::addView( Simulation *s, XMLNode * node ){
 	debugger.log(string("Initializing the view to be added"), GENERAL, "LOADER");
-	SimView *sview = new SimView( *s );
+	SimView *sview = new SimView( s->environment );
 	XMLElement* element =  node->ToElement();	
 	vec p = ep.parseVector( element->GetText() );
 	sview->setViewPort(p);
@@ -91,14 +91,13 @@ void XMLLoader::addView( Simulation *s, XMLNode * node ){
 
 void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 	
-	
 	XMLNode *it = node->FirstChild();	
 	int id = node->ToElement()->IntAttribute("id");
 	int rate = node->ToElement()->IntAttribute("rate");
 	int max_num = node->ToElement()->IntAttribute("max");
 	bool c = node->ToElement()->BoolAttribute("visible");
 
-	SoftBody *a = s->addSoftBody( id );
+	SoftBody *a = s->environment->addSoftBody( id );
 	a->setVisible( c );
 
 	GeometricTransform gt;
@@ -122,7 +121,7 @@ void XMLLoader::addAnimat( Simulation *s, XMLNode *node ){
 		}else if( strcmp( elementName, "softness" ) == 0 ){
 			double s = ep.parseDouble( element->GetText() );
 			
-			a->getShape()->setAlpha( s );		
+			a->getShape()->alpha = s;		
 		}else
 			throw "Unrecognized plane options";// exception
 

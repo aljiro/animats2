@@ -11,6 +11,15 @@ vec morph::animats::quadTx( vec q ){
 	return qc;
 }
 
+bool morph::animats::allInInterval( vec w, double a, double b ){
+	bool r = true;
+
+	for( int i = 0; i < 3; i++ )
+		r = r && (w(i) >= a  && w(i) <= b);
+
+	return r;
+}		
+
 Debug& Debug::getInstance(){
 	if( Debug::instance == NULL )
 		Debug::instance = new Debug();

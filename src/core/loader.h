@@ -2,6 +2,7 @@
 #define LOADER_H
 
 #include "simulation.h"
+#include "environment.h"
 #include "../utilities/util.h"
 #include "../views/simview.h"
 

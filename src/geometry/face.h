@@ -1,11 +1,6 @@
 #ifndef FACE_H
 #define FACE_H
 
-/*
-A face DOES contain a reference to the actual points. 
-A face is a topological object.
-*/ 
-
 #include <iostream>
 #include <vector>
 #include <armadillo>
@@ -28,13 +23,15 @@ class FaceException : public exception{
 	}
 };
 
+vec centroid( vector<Point *>& points );
+
 class Face{
 
 private:
 	mat C;
 
 public:
-	vector<Edge> edges; // edges sorted counter-clockwise
+	vector<Edge *> edges; // edges sorted counter-clockwise
 	vector<Point*> points; // Just the 3 points of the face
 	vector<int> indexes;
 	vec normal;
@@ -55,15 +52,6 @@ public:
     Computes the normal vector to the face for a particular 
 	*/
 	void computeNormal( );
-	bool isPenetrated( const Edge&  e );
-	bool penetrates( Point *p );
-
-	/*
-	 * Interface methods
-	 */
-	bool isEdgeCrossing( const Edge& e );
-	vec getFaceProjection( Edge& e ) ;
-	double getPenetrationDepth( Edge& e );
 
 	// Destructor
 	~Face();

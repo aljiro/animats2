@@ -23,8 +23,8 @@ private:
 public:		
 	//void addFace4( int p1, int p2, int p3, int p4 );
 	void addFace3( GeometricObject*, int p1, int p2, int p3 );
-	void addEdgeUnique( GeometricObject*, Edge& e );
-	void collectEdges( GeometricObject* );
+	// void addEdgeUnique( GeometricObject*, Edge& e );
+	// void collectEdges( GeometricObject* );
 	/*
 		Generates the triangulation of the polygon given by the polyhedron described by the given points
 	*/

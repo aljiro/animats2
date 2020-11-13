@@ -10,6 +10,7 @@ in vec3 position;
 
 uniform vec3 lightColor;
 uniform vec3 lightPosition;
+uniform float alpha;
 
 void main()
 {
@@ -19,5 +20,5 @@ void main()
 	vec3 l = normalize( lightDirection );
 	float cosTheta = clamp( dot(n, l), 0, 1 );
 
-    color = vec4(fragmentColor.xyz * lightColor * lightPower * cosTheta/(d*d), 1);
+    color = vec4(fragmentColor.xyz * lightColor * lightPower * cosTheta/(d*d), alpha);
 }

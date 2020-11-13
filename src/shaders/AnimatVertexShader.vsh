@@ -14,6 +14,7 @@ uniform mat4 M;
 uniform mat4 V;
 uniform vec4 color;
 uniform vec3 lightPosition;
+uniform float alpha;
 
 void main(){	
     gl_Position = MVP*vec4(vertex.xyz, 1.0);

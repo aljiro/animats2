@@ -7,6 +7,7 @@
 #include "core/force.h"
 #include "utilities/util.h"
 #include "time.h"
+#include "views/video.h"
 
 using namespace morph::animats;
 
@@ -50,12 +51,16 @@ int main( int argc, char** args ){
 	if( processArgs( argc, args ) != 0 )
 		return -1;
 	
+	debugger.log("Loading simulation", GENERAL, "main");
 	Simulation *s = Simulation::load( args[1] );
+	debugger.log("Adding forces", GENERAL, "main");
 	GravityForce *gf = new GravityForce(NULL);
-	s->addForce( gf );
+	s->environment->addForce( gf );
+	s->addView(new VideoRecorder((SimView*)s->views[0]));
 	//s->addView( new ContactView( *s ) );
 	//s->addView( new ReportView(*s, ReportView::DUMP_POINTS | 
 	//							   ReportView::DUMP_CONTACTS) );
 	s->reset();
-	s->run( -1 );
+	debugger.log("Running", GENERAL, "main");
+	s->run( 1500 );
 }

@@ -8,6 +8,8 @@ using namespace arma;
 
 namespace morph{ namespace animats{
 
+class Point;
+
 class Edge{
 public:
 	Point* v0;

@@ -7,6 +7,8 @@ using namespace morph::animats;
 GeometricObject::GeometricObject( MeshProvider *mp ):dx(zeros<vec>(3)){
 	this->id = rand();
 	this->visible = true;
+	this->transparency = 1.0;
+	
 	mp->populate(this);
 }
 
@@ -108,16 +110,15 @@ vector<Edge>& GeometricObject::getEdges(){
 // SoftBody
 SoftBody::SoftBody( MeshProvider* mp, double mass, double alpha ): GeometricObject(mp), alpha(alpha){
 	this->type = SOFT;
-	this->shape = new DeformableShape<LinearMatchTransform>( alpha, this->points );
+	this->shape = new LinearDeformableModel( alpha );
 }
 
-DeformableShape<LinearMatchTransform>* SoftBody::getShape(){
+DeformableModel* SoftBody::getShape(){
 	 return this->shape;
 }
 
 void SoftBody::initShape(){
 	this->shape->init( this->points );
-
 }
 
 

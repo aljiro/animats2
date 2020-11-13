@@ -1,73 +1,58 @@
 #ifndef COLLISION_H
-#define COLLISION_H 
+#define COLLISION_H
 
-#include <vector>
-#include <iostream>
 #include <armadillo>
-#include <map>
-#include <list>
-#include <time.h>
-
-#include "box.h"
-#include "contact.h"
-#include "chashtable.h"
-#include "../geometry/gobject.h"
+#include <vector>
 #include "../geometry/face.h"
-#include "../utilities/util.h"
+#include "../geometry/point.h"
+#include "../utilities/computationalg.h"
 
 using namespace std;
 using namespace arma;
 
 namespace morph{ namespace animats{
 
-typedef struct {
-	Point* point;
-	GeometricObject* go;
-	int originalIdx;
-} CPoint;
-
-typedef struct {
-	Face* face;
-	GeometricObject* go;
-	Box *aabb;
-	int originalIdx;
-} CFace;
-
-/**
- CollisionManager - Manages the collisions in space.
- */
-class CollisionManager{
-private:
-	vector<CPoint> points;
-	vector<CFace> faces;
-	map<GeometricObject*, vector<int>> indexes;
-	map<GeometricObject*, int> objects;
-	// Hash tables
-	CHashTable ht;
-	// Contacts
-	ContactList *contacts;
-
-	// Methods
-	void handleCollisions( CFace cf, CHashItem chi, int step );
-	void storeCollision( CFace& cf, CPoint& cp );
-	void evaluateContacts( CFace cf, int step );
-	// Hashes points and computes aabb
-	void firstPass( int step ); 
-	// Check the faces and handles collisions
-	void secondPass( int step ); 
+class Collision{
 public:
-	explicit CollisionManager();
+    double hc;
+    int ctype;
 
-	void clear();
-	void registerObject( GeometricObject *go );
-	void findCollisions( int step );
-	void pruneContacts();
-	void solveRegions( int step );
-
-	ContactList *getContactList();
-
-	~CollisionManager();
+    Collision( double hc );
+    void updatePointSpeed( Point *p, vec imp );
+    virtual void resolve() = 0;
 };
 
+class FPCollision : public Collision{
+public:
+    Face *f;
+    Point *p;
+    vec w;
+
+    FPCollision( double hc, Face *f, Point *p, vec w );
+    void resolve();
+};
+
+class EECollision : public Collision{
+public:
+    Edge *e1;
+    Edge *e2;
+
+    EECollision( double hc, Edge *e1, Edge *e2 );
+    void resolve();
+};
+
+class CollisionList{
+private:
+    
+public:
+vector<Collision *> collisions;
+    CollisionList();
+
+    void push( Collision* c );
+    int count();
+    bool isEmpty();
+    Collision* pop();
+    void discount( double hc );
+};
 }}
-#endif //COLLISION_H
+#endif // COLLISION

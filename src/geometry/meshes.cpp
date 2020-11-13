@@ -9,26 +9,26 @@ void MeshProvider::addFace3( GeometricObject* go, int p1, int p2, int p3 ){
 	go->addFace( p1, p2, p3 );	
 }
 
-void MeshProvider::addEdgeUnique( GeometricObject* go, Edge& e ){
-	bool in_vector = false;
+// void MeshProvider::addEdgeUnique( GeometricObject* go, Edge& e ){
+// 	bool in_vector = false;
 
-	for( int i = 0; i < go->edges.size(); i++ ){
-		Edge edge = go->edges[i];
-		if( e.v0 == edge.v0 && e.v1 == edge.v1 )
-			in_vector = true;
-	}
+// 	for( int i = 0; i < go->edges.size(); i++ ){
+// 		Edge edge = go->edges[i];
+// 		if( e.v0 == edge.v0 && e.v1 == edge.v1 )
+// 			in_vector = true;
+// 	}
 
-	if( !in_vector )
-		go->edges.push_back( e );
-}
+// 	if( !in_vector )
+// 		go->edges.push_back( e );
+// }
 
-void MeshProvider::collectEdges( GeometricObject* go ){
-	for( int i = 0; i < go->faces.size(); i++ ){		
+// void MeshProvider::collectEdges( GeometricObject* go ){
+// 	for( int i = 0; i < go->faces.size(); i++ ){		
 
-		for( int j = 0; j < go->faces[i]->edges.size(); j++ )
-			this->addEdgeUnique(go, go->faces[i]->edges[j]);
-	} 
-}
+// 		for( int j = 0; j < go->faces[i]->edges.size(); j++ )
+// 			this->addEdgeUnique(go, go->faces[i]->edges[j]);
+// 	} 
+// }
 
 
 // CloneMeshProvider
@@ -65,7 +65,7 @@ void PlaneMeshProvider::populate( GeometricObject* go ){
 
 	this->addFace3( go, 0, 1, 2 );
 	this->addFace3( go, 0, 2, 3 );
-	this->collectEdges(go);
+	// this->collectEdges(go);
 	this->fixNormal(go);
 
 }

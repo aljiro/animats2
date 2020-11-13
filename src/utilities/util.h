@@ -141,12 +141,11 @@ inline void swap( vec x[], int i, int j ){
 	x[i] = tmp;
 }
 
-
-
 // Transformations 
 vec idTx( vec q );
-
 vec quadTx( vec q );
+// Utility
+bool allInInterval( vec w, double a, double b );
 
 extern Debug& debugger;
 

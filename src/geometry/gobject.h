@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <stdexcept>
 
-#include "shape.h"
+#include "deformable_model.h"
 #include "geometry.h"
 #include "meshes.h"
 #include "face.h"
@@ -28,7 +28,9 @@ class GeometricObject{
 private:
 	int id;
 	bool visible;
+	
 protected:
+	
 	
 	vector<Face *> faces;
 	vector<Edge> edges;
@@ -36,6 +38,7 @@ protected:
 	vector<Point *> points;
 
 public:
+	double transparency;
 	vec dx;
 	BodyType type;
 	// Graphic objects
@@ -70,12 +73,12 @@ public:
 
 class SoftBody : public GeometricObject{
 private:
-	DeformableShape<LinearMatchTransform> *shape;
+	DeformableModel *shape;
 	double alpha;
 
 public:
 	SoftBody( MeshProvider* mp, double mass = 1, double alpha = 0.2 );
-	DeformableShape<LinearMatchTransform>* getShape();
+	DeformableModel* getShape();
 	void initShape( );
 };
 

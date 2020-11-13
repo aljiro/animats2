@@ -21,7 +21,7 @@ class ContactView : public SimView{
 private:
 	
 public:
-	ContactView( Simulation& s );
+	ContactView( Environment *environment );
 
 	// Overwrite
 	void drawObject( GeometricObject go[], int colorId);

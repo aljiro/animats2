@@ -3,45 +3,25 @@
 using namespace morph::animats;
 
 // Private
-Simulation::Simulation( string workingDir ):running(false), pause(false), workingDir(workingDir){
-	forceChain = NULL;
+Simulation::Simulation( string workingDir ):running(false), pause(true), workingDir(workingDir){
+	this->environment = new Environment( workingDir );
+	this->solver = new Solver(this->environment, 0.01);
+	this->collisionMgr = new CollisionManager( this->solver );
 }
 
-// Public 
-void Simulation::computeExternalForces(){
-	debugger.log(string("Adding contact forces"), LOOP, "SIMULATION" );
-
-	if( this->forceChain == NULL )
-		return;
-
-	debugger.log(string("Resolving the force chain"), LOOP, "SIMULATION" );
-
-	for( GeometricObject *go : this->softBodies )
-		this->forceChain->applyForce( go );
-
-	for( GeometricObject *go : this->rigidBodies )
-		this->forceChain->applyForce( go );
-}
 
 void Simulation::registerObjectsForCollision(){
     debugger.log(string("Registering rigid bodies"), GENERAL, "SIMULATION");
-    collisionMgr.clear();
+    collisionMgr->clear();
     
-    for( RigidBody *rb : this->rigidBodies ){        
-        collisionMgr.registerObject(rb);
+    for( RigidBody *rb : environment->getRigidBodies() ){        
+        collisionMgr->registerObject(rb);
     }
     
-    debugger.log(string("Registering animats"), GENERAL, "SIMULATION");
-    for( SoftBody *sb: this->softBodies ){        
-        collisionMgr.registerObject( sb ); 
-    }
-}
-
-void Simulation::addForce( ForceObject *fo ){
-	if( this->forceChain == NULL )
-		this->forceChain = fo;
-	else
-		this->forceChain->add( fo );
+    // debugger.log(string("Registering animats"), GENERAL, "SIMULATION");
+    // for( SoftBody *sb: environment->getSoftBodies() ){        
+    //     collisionMgr->registerObject( sb ); 
+    // }
 }
 
 void Simulation::reset(){
@@ -53,7 +33,7 @@ void Simulation::reset(){
 	// for( RigidBody *rb : rigidBodies ){
 	// 	rb->reset();
 	// }
-	initShapes();
+	environment->initShapes();
 	registerObjectsForCollision();
 	debugger.log(string("Setting up the views"), GENERAL, "SIMULATION");
 
@@ -61,12 +41,8 @@ void Simulation::reset(){
 		v->setup( *this );
 }
 
-vector<SoftBody *>& Simulation::getSoftBodies(){
-	return this->softBodies;
-}
-
-vector<RigidBody *>& Simulation::getRigidBodies(){
-	return this->rigidBodies;
+void Simulation::setEnvironment( Environment* environment ){
+	this->environment = environment;
 }
 
 void Simulation::close(){
@@ -79,58 +55,55 @@ void Simulation::togglePause(){
 
 void Simulation::run( int maxSteps ){
 	debugger.log(string("Running the simulation"), GENERAL, "SIMULATION");
-	Solver solver(0.01);
+	
 	this->running = true;
+	int pass = 0;
+	SoftBody* sb;
 
 	while( this->running ){
 		if( !this->pause ){
+			sb = environment->generateBodies( step );
+			if( sb != NULL ){
+				// cout << "SB: " << sb << endl;
+				collisionMgr->registerObject( sb ); 
+			}
+			// Finding candidate positions from the shape matching
+			// Step 1
+			solver->stepMaterial();
+			// // Step 4
+			// cout << "Processing proximities" << endl;
+			// collisionMgr.processProximities( this->step );			
+			// cout << "Normalizing interaction" << endl;
+			// collisionMgr.normalizeInteractions();
+			// cout << "Processing collisions" << endl;
 			
-			//collisionMgr.solveRegions( this->step );
-			solver.stepMaterial( *this );
-			collisionMgr.findCollisions( this->step );
-			collisionMgr.getContactList()->resolveForces();	
-			solver.stepCollisions( *this );
-			// collisionMgr.pruneContacts();
+			pass = 1;
+			collisionMgr->findCollisions( this->step );
+			// cout << "Collisions first pass found: " << collisionMgr->collisions->count() << endl;
+			// cin.get();
+			while( collisionMgr->hasCollisions() ){
+
+				while( collisionMgr->hasCollisions() )
+					collisionMgr->resolveNext();
+
+				collisionMgr->findCollisions( this->step );
+				// cout << "Collisions " << ++pass << " pass found: " << collisionMgr->collisions->count() << endl;
+				// cin.get();
+			}
+			
+			// collisionMgr.getContactList()->resolveForces();	
+			// Step 5-6: compute final collisions and update velocities
+			// Step 7 Update velocities of non colising points!
+			solver->stepCollisions();
+			
 			this->step++;
 		}
+
 		this->notifyViews( string("Simulation step: ") + to_string(this->step) );
-		
+		// if( this->step > 20 ) cin.get();
 		if( maxSteps > 0 && this->step > maxSteps )
 			this->running = false;
 	}
-}
-
-RigidBody* Simulation::addRigidBody( int id, string type ){
-	debugger.log(string("Adding a new rigid body"), GENERAL, "SIMULATION");
-	MeshProvider *mp;
-	RigidBody* rb;
-
-	if( type == "plane" ){
-		mp = new PlaneMeshProvider();
-		rb = new Plane( mp, Floor );
-	}else{
-		mp = new PlaneMeshProvider();
-		rb = new RigidBody( mp );
-	}
-	
-	this->rigidBodies.push_back( rb );
-	return rb;
-}
-
-void Simulation::initShapes(){
-	for(SoftBody *sb : softBodies){
-		sb->initShape();
-	}
-}
-
-
-SoftBody* Simulation::addSoftBody( int id ){
-	debugger.log(string("Adding a new soft body"), GENERAL, "SIMULATION");
-	string path = this->workingDir + string("/mesh.obj");
-	SoftBody *s = new SoftBody( new ObjMeshProvider( path.c_str() ) );
-	s->setId( id );
-	this->softBodies.push_back( s );
-	return s;
 }
 
 // Static
@@ -161,13 +134,5 @@ void Simulation::notifyViews( string msg){
 }
 
 Simulation::~Simulation(){
-	for( RigidBody *rb : rigidBodies ){
-		glDeleteBuffers(1, &(rb->VBO) );
-    	glDeleteVertexArrays(1, &(rb->VAO) );
-	}
-
-	for( SoftBody *sb : softBodies ){
-		glDeleteBuffers(1, &(sb->VBO) );
-    	glDeleteVertexArrays(1, &(sb->VAO) );
-	}
+	
 }

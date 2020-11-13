@@ -1,7 +1,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include "simulation.h"
+#include "environment.h"
 #include "../geometry/gobject.h"
 #include "../geometry/point.h"
 #include "../utilities/util.h"
@@ -14,16 +14,20 @@ class Simulation;
  */
 class Solver{
 private:
-	double h;
+	Environment* environment;
+	
+	double h0;
 	double t;
 	// Integrates the equations of motion for one soft body
 	void integrateSoftBody( SoftBody *go );
-	void computeGoals( Simulation& s );
+	void computeGoals();
 public:
-	explicit Solver( double h = 0.01 );
+	double h;
+	explicit Solver( Environment* environment, double h = 0.01 );
 	// Produces one step of the simulation
-	void stepMaterials( Simulation& s );	
-	void stepCollisions( Simulation& s );
+	void stepMaterial( );	
+	void partialStep( double hc );
+	void stepCollisions( );
 };
 
 }}

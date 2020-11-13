@@ -2,7 +2,7 @@
 
 using namespace morph::animats;
 
-ContactView::ContactView( Simulation& s ):SimView(s){
+ContactView::ContactView( Environment *environment ):SimView(environment){
 
 }
 
@@ -25,7 +25,7 @@ void ContactView::drawObject( GeometricObject go[], int colorId){
 		inc =false;
 
 		for( int j = 0; j < 3; j++ )
-			if( faces[i]->points[j]->state == Invalid )
+			if( faces[i]->points[j]->state != Free )
 				inc = true;
 
 		if( !inc )

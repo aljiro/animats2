@@ -2,7 +2,8 @@
 
 using namespace morph::animats;
 
-SimView::SimView( Simulation& s ):shaderId(-1), colorId(-1){
+SimView::SimView( Environment* environment ):shaderId(-1), colorId(-1){
+	this->environment = environment;
 	this->width = 1024;
 	this->height = 768;
 	this->lightColor = new GLfloat[3]{1,1,1};
@@ -70,9 +71,7 @@ int SimView::init(){
     glClearColor(0.0,0.0,0.0,0.0);
     glClearColor(0.0f, 0.3f, 0.4f, 0.0f);
 
- 
     return 0;
-
 }
 
 void SimView::setViewPort( vec p ){
@@ -177,15 +176,14 @@ void SimView::computeTransformationsFromInput(){
 	}
 
 	cParams.lastTime = currentTime;
-
 }
 
 // Drawing routines
 void SimView::setup( Simulation &s ){
 	debugger.log(string("Setting up graphics"), GENERAL, "SIMVIEW");
 	// Initializing buffers for each object
-	vector<SoftBody *>& softBodies = s.getSoftBodies();
-	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
+	vector<SoftBody *>& softBodies = environment->sbQueue;
+	vector<RigidBody *>& rigidBodies = environment->getRigidBodies();
 
 	for( SoftBody *sb : softBodies ){
 		createBuffer( sb );
@@ -209,6 +207,10 @@ void SimView::setup( Simulation &s ){
 	// this->lightPowerId = glGetUniformLocation( this->shaderId, "lightColor" );
 	this->lightColorId = glGetUniformLocation( this->shaderId, "lightColor" );
 	this->lightPositionId = glGetUniformLocation( this->shaderId, "lightPosition" );
+	this->alphaId = glGetUniformLocation( this->shaderId, "alpha" );
+
+	// glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	
 }
 
@@ -234,8 +236,7 @@ void SimView::collectObjectShape( GeometricObject *go, GLfloat *shape, GLfloat *
 }
 
 
-void SimView::drawObject( GeometricObject *go , int colorId){
-	
+void SimView::drawObject( GeometricObject *go , int colorId){	
 	
 	if( !go->isVisible() )
 		return;
@@ -334,6 +335,8 @@ void SimView::drawObject( GeometricObject *go , int colorId){
 	// glUniform4fv( this->lightPowerId, 1, &this->lightPower );
 	glUniform3fv( this->lightColorId, 1, this->lightColor );
 	glUniform3fv( this->lightPositionId, 1, this->lightPosition );
+
+	glUniform1f( this->alphaId, go->transparency );
 	
 	glDrawArrays( GL_TRIANGLES, 0, faces.size()*3 );
 }
@@ -347,6 +350,16 @@ void SimView::notify( Simulation& s, std::string message ){
 
 	if (glfwGetKey( this->window, GLFW_KEY_U ) == GLFW_PRESS){
 		s.pause = false;
+	}
+	
+	if (glfwGetKey( this->window, GLFW_KEY_V ) == GLFW_PRESS){
+		vector<SoftBody *>& softBodies = environment->getSoftBodies();
+		softBodies[0]->setVisible(!softBodies[0]->isVisible());
+	}
+
+	if (glfwGetKey( this->window, GLFW_KEY_B ) == GLFW_PRESS){
+		vector<SoftBody *>& softBodies = environment->getSoftBodies();
+		softBodies[1]->setVisible(!softBodies[1]->isVisible());
 	}
 
 	computeTransformationsFromInput();
@@ -366,8 +379,8 @@ void SimView::draw( Simulation& s ){
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	// Drawing rigid bodies first
-	vector<SoftBody *>& softBodies = s.getSoftBodies();
-	vector<RigidBody *>& rigidBodies = s.getRigidBodies();
+	vector<SoftBody *>& softBodies = environment->getSoftBodies();
+	vector<RigidBody *>& rigidBodies = environment->getRigidBodies();
 	debugger.log(string("Drawing objects: Rigid bodies"), LOOP, "SIMVIEW");
 
 	for( RigidBody *rb : rigidBodies ){
