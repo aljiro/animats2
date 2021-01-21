@@ -62,10 +62,10 @@ Collision::Collision( double hc ):hc(hc){
 
 void Collision::updatePointSpeed( Point *p, vec imp ){
 	if( p->state != Colliding ){
-		p->v_half = 0*imp;
+		p->v_half += imp;
 		p->state = Colliding;
 	}else{
-		p->v_half = 0*imp;
+		p->v_half += imp;
 		
 	}
 	

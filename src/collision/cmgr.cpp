@@ -152,14 +152,14 @@ void CollisionManager::resolveNext(){
 	if( solver->h > 0.001 )
 		solver->partialStep( c->hc*0 );
 	
-	// if( c->ctype == 0 )
-	// 	cout << "p.vhalf: " << printvec(((FPCollision*)c)->p->v_half) << ", p.vhalfs: " << 
-	// 		printvec(((FPCollision*)c)->f->points[0]->v_half) << ", " << 
-	// 		printvec(((FPCollision*)c)->f->points[1]->v_half) << ", " <<
-	// 		printvec(((FPCollision*)c)->f->points[2]->v_half) << endl;
-	// else if( c->ctype == 1 )
-	// 	cout << "e0.vhalfs: " << printvec(((EECollision*)c)->e1->v0->v_half) << ", " << printvec(((EECollision*)c)->e1->v1->v_half) <<
-    //             ", ef.vhalfs: " << printvec(((EECollision*)c)->e2->v0->v_half) << ", " << printvec(((EECollision*)c)->e2->v1->v_half) << endl;
+	if( c->ctype == 0 )
+		cout << "p.vhalf: " << printvec(((FPCollision*)c)->p->v_half) << ", p.vhalfs: " << 
+			printvec(((FPCollision*)c)->f->points[0]->v_half) << ", " << 
+			printvec(((FPCollision*)c)->f->points[1]->v_half) << ", " <<
+			printvec(((FPCollision*)c)->f->points[2]->v_half) << endl;
+	else if( c->ctype == 1 )
+		cout << "e0.vhalfs: " << printvec(((EECollision*)c)->e1->v0->v_half) << ", " << printvec(((EECollision*)c)->e1->v1->v_half) <<
+                ", ef.vhalfs: " << printvec(((EECollision*)c)->e2->v0->v_half) << ", " << printvec(((EECollision*)c)->e2->v1->v_half) << endl;
 
 	c->resolve();
 	// cout << "After: " << endl;

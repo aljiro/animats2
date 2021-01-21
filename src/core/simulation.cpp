@@ -64,7 +64,6 @@ void Simulation::run( int maxSteps ){
 		if( !this->pause ){
 			sb = environment->generateBodies( step );
 			if( sb != NULL ){
-				// cout << "SB: " << sb << endl;
 				collisionMgr->registerObject( sb ); 
 			}
 			// Finding candidate positions from the shape matching
@@ -79,7 +78,7 @@ void Simulation::run( int maxSteps ){
 			
 			pass = 1;
 			collisionMgr->findCollisions( this->step );
-			// cout << "Collisions first pass found: " << collisionMgr->collisions->count() << endl;
+			cout << "Collisions first pass found: " << collisionMgr->collisions->count() << endl;
 			// cin.get();
 			while( collisionMgr->hasCollisions() ){
 
@@ -87,7 +86,7 @@ void Simulation::run( int maxSteps ){
 					collisionMgr->resolveNext();
 
 				collisionMgr->findCollisions( this->step );
-				// cout << "Collisions " << ++pass << " pass found: " << collisionMgr->collisions->count() << endl;
+				cout << "Collisions " << ++pass << " pass found: " << collisionMgr->collisions->count() << endl;
 				// cin.get();
 			}
 			

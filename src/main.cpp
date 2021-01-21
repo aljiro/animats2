@@ -56,7 +56,7 @@ int main( int argc, char** args ){
 	debugger.log("Adding forces", GENERAL, "main");
 	GravityForce *gf = new GravityForce(NULL);
 	s->environment->addForce( gf );
-	s->addView(new VideoRecorder((SimView*)s->views[0]));
+	//s->addView(new VideoRecorder((SimView*)s->views[0]));
 	//s->addView( new ContactView( *s ) );
 	//s->addView( new ReportView(*s, ReportView::DUMP_POINTS | 
 	//							   ReportView::DUMP_CONTACTS) );

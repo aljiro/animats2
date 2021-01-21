@@ -29,9 +29,7 @@ private:
 	int id;
 	bool visible;
 	
-protected:
-	
-	
+protected:	
 	vector<Face *> faces;
 	vector<Edge> edges;
 	State initialState;
