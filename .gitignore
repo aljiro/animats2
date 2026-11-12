@@ -39,3 +39,9 @@
 # build directory
 build/
 # End of https://www.gitignore.io/api/c++
+
+# Mesh models are sources, not compiled objects
+!res/models/*.obj
+
+# Videos recorded by the examples
+*.avi

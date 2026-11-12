@@ -1,0 +1,2 @@
+add_executable(softcollision colliding.cpp)
+target_link_libraries(softcollision softmats)
